@@ -1,0 +1,474 @@
+{% extends "base.html" %}
+
+{% block title %}My Inventory - {{ vendor.name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="header-content">
+        <div>
+            <h1><i class="fas fa-boxes"></i> My Inventory</h1>
+            <p class="page-subtitle">Manage your stock and ingredients - {{ vendor.name }}</p>
+        </div>
+        <div class="header-actions">
+            {% if vendor.is_approved %}
+                <a href="/vendor/stock/add" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Add Stock Item
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Stock Stats -->
+<div class="stats-grid" style="margin-bottom: 30px;">
+    <div class="stat-card">
+        <div class="stat-content">
+            <div class="stat-number">{{ stock_items|length }}</div>
+            <div class="stat-label">Total Items</div>
+        </div>
+        <div class="stat-icon">
+            <i class="fas fa-boxes"></i>
+        </div>
+    </div>
+    
+    <div class="stat-card warning">
+        <div class="stat-content">
+            <div class="stat-number">{{ stock_items|selectattr("current_stock", "le", stock_items|map(attribute="minimum_stock"))|list|length }}</div>
+            <div class="stat-label">Low Stock</div>
+        </div>
+        <div class="stat-icon">
+            <i class="fas fa-exclamation-triangle"></i>
+        </div>
+    </div>
+    
+    <div class="stat-card success">
+        <div class="stat-content">
+            <div class="stat-number">{{ stock_items|selectattr("current_stock", "gt", stock_items|map(attribute="reorder_level"))|list|length }}</div>
+            <div class="stat-label">Well Stocked</div>
+        </div>
+        <div class="stat-icon">
+            <i class="fas fa-check-circle"></i>
+        </div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-content">
+            <div class="stat-number">₹{{ stock_items|map(attribute="unit_cost")|sum|round(0) }}</div>
+            <div class="stat-label">Total Value</div>
+        </div>
+        <div class="stat-icon">
+            <i class="fas fa-rupee-sign"></i>
+        </div>
+    </div>
+</div>
+
+<!-- Stock Items -->
+<div class="card">
+    <div class="card-header">
+        <h3><i class="fas fa-list"></i> Stock Items</h3>
+        <div class="card-actions">
+            <div class="search-box">
+                <input type="text" placeholder="Search stock items..." id="searchInput">
+            </div>
+            <select id="statusFilter" class="form-control form-select">
+                <option value="">All Status</option>
+                <option value="low">Low Stock</option>
+                <option value="reorder">Needs Reorder</option>
+                <option value="good">Well Stocked</option>
+            </select>
+        </div>
+    </div>
+    <div class="card-body">
+        {% if stock_items %}
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Item Details</th>
+                        <th>Current Stock</th>
+                        <th>Unit</th>
+                        <th>Min/Max</th>
+                        <th>Unit Cost</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="stockTable">
+                    {% for item in stock_items %}
+                    <tr data-name="{{ item.item_name.lower() }}" 
+                        data-status="{% if item.current_stock <= item.minimum_stock %}low{% elif item.current_stock <= item.reorder_level %}reorder{% else %}good{% endif %}">
+                        <td>
+                            <div class="item-details">
+                                <h4>{{ item.item_name }}</h4>
+                                <p class="text-muted">{{ item.description }}</p>
+                            </div>
+                        </td>
+                        <td>
+                            <strong class="stock-quantity 
+                                {% if item.current_stock <= item.minimum_stock %}text-danger
+                                {% elif item.current_stock <= item.reorder_level %}text-warning
+                                {% else %}text-success{% endif %}">
+                                {{ item.current_stock }}
+                            </strong>
+                        </td>
+                        <td>{{ item.unit }}</td>
+                        <td>
+                            <small class="text-muted">
+                                Min: {{ item.minimum_stock }}<br>
+                                Max: {{ item.maximum_stock }}
+                            </small>
+                        </td>
+                        <td>₹{{ item.unit_cost }}</td>
+                        <td>
+                            {% if item.current_stock <= item.minimum_stock %}
+                                <span class="badge badge-danger">
+                                    <i class="fas fa-exclamation-triangle"></i> Low Stock
+                                </span>
+                            {% elif item.current_stock <= item.reorder_level %}
+                                <span class="badge badge-warning">
+                                    <i class="fas fa-clock"></i> Reorder
+                                </span>
+                            {% else %}
+                                <span class="badge badge-success">
+                                    <i class="fas fa-check"></i> Good
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-primary" onclick="adjustStock({{ item.id }}, '{{ item.item_name }}', {{ item.current_stock }})">
+                                    <i class="fas fa-plus-minus"></i>
+                                </button>
+                                <a href="/vendor/stock/edit/{{ item.id }}" class="btn btn-outline">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <button class="btn btn-info" onclick="viewHistory({{ item.id }})">
+                                    <i class="fas fa-history"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">
+                <i class="fas fa-boxes"></i>
+            </div>
+            <h3>No Stock Items</h3>
+            <p>Start tracking your inventory by adding your first stock item!</p>
+            {% if vendor.is_approved %}
+            <a href="/vendor/stock/add" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Add First Item
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Quick Actions -->
+{% if vendor.is_approved and stock_items %}
+<div class="card" style="margin-top: 30px;">
+    <div class="card-header">
+        <h3><i class="fas fa-bolt"></i> Quick Actions</h3>
+    </div>
+    <div class="card-body">
+        <div class="quick-actions">
+            <button class="btn btn-warning" onclick="showLowStockReport()">
+                <i class="fas fa-exclamation-triangle"></i> Low Stock Report
+            </button>
+            <button class="btn btn-info" onclick="bulkAdjustment()">
+                <i class="fas fa-edit"></i> Bulk Adjustment
+            </button>
+            <a href="/vendor/stock/add" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Add New Item
+            </a>
+            <button class="btn btn-success" onclick="exportStock()">
+                <i class="fas fa-download"></i> Export Data
+            </button>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Stock Adjustment Modal -->
+<div id="adjustModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Adjust Stock</h3>
+            <span class="close" onclick="closeAdjustModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <form id="adjustStockForm">
+                <input type="hidden" id="adjustItemId">
+                <div class="form-group">
+                    <label>Item: <strong id="adjustItemName"></strong></label>
+                </div>
+                <div class="form-group">
+                    <label>Current Stock: <strong id="adjustCurrentStock"></strong></label>
+                </div>
+                <div class="form-group">
+                    <label for="adjustmentType">Adjustment Type</label>
+                    <select id="adjustmentType" class="form-control">
+                        <option value="in">Stock In (+)</option>
+                        <option value="out">Stock Out (-)</option>
+                        <option value="adjustment">Adjustment</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="adjustQuantity">Quantity</label>
+                    <input type="number" id="adjustQuantity" class="form-control" min="1" required>
+                </div>
+                <div class="form-group">
+                    <label for="adjustNotes">Notes (Optional)</label>
+                    <textarea id="adjustNotes" class="form-control" rows="2" placeholder="Reason for adjustment..."></textarea>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-outline" onclick="closeAdjustModal()">Cancel</button>
+            <button class="btn btn-primary" onclick="submitAdjustment()">Update Stock</button>
+        </div>
+    </div>
+</div>
+
+<style>
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+}
+
+.stat-card.warning {
+    border-left: 4px solid var(--warning-color);
+}
+
+.stat-card.success {
+    border-left: 4px solid var(--success-color);
+}
+
+.card-actions {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+.search-box input {
+    width: 250px;
+    padding: 8px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+}
+
+.item-details h4 {
+    margin: 0 0 5px 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.item-details p {
+    margin: 0;
+    font-size: 0.9rem;
+}
+
+.stock-quantity {
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.quick-actions {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+}
+
+.empty-icon {
+    font-size: 4rem;
+    color: var(--border-color);
+    margin-bottom: 20px;
+}
+
+/* Modal Styles */
+.modal {
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    background-color: white;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 500px;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.modal-header, .modal-footer {
+    padding: 20px 25px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-footer {
+    border-bottom: none;
+    border-top: 1px solid var(--border-color);
+}
+
+.modal-body {
+    padding: 25px;
+}
+
+.close {
+    color: var(--text-muted);
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close:hover {
+    color: var(--text-primary);
+}
+
+@media (max-width: 768px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .card-actions {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+    
+    .search-box input {
+        width: 100%;
+    }
+    
+    .quick-actions {
+        flex-direction: column;
+    }
+}
+</style>
+
+<script>
+// Search and filter functionality
+function filterTable() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const statusFilter = document.getElementById('statusFilter').value;
+    const rows = document.querySelectorAll('#stockTable tr');
+    
+    rows.forEach(row => {
+        const itemName = row.getAttribute('data-name');
+        const itemStatus = row.getAttribute('data-status');
+        
+        const matchesSearch = !searchTerm || itemName.includes(searchTerm);
+        const matchesStatus = !statusFilter || itemStatus === statusFilter;
+        
+        if (matchesSearch && matchesStatus) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+}
+
+document.getElementById('searchInput').addEventListener('input', filterTable);
+document.getElementById('statusFilter').addEventListener('change', filterTable);
+
+// Stock adjustment functions
+function adjustStock(itemId, itemName, currentStock) {
+    document.getElementById('adjustItemId').value = itemId;
+    document.getElementById('adjustItemName').textContent = itemName;
+    document.getElementById('adjustCurrentStock').textContent = currentStock;
+    document.getElementById('adjustQuantity').value = '';
+    document.getElementById('adjustNotes').value = '';
+    document.getElementById('adjustModal').style.display = 'flex';
+}
+
+function closeAdjustModal() {
+    document.getElementById('adjustModal').style.display = 'none';
+}
+
+function submitAdjustment() {
+    const itemId = document.getElementById('adjustItemId').value;
+    const type = document.getElementById('adjustmentType').value;
+    const quantity = parseInt(document.getElementById('adjustQuantity').value);
+    const notes = document.getElementById('adjustNotes').value;
+    
+    if (!quantity || quantity <= 0) {
+        alert('Please enter a valid quantity');
+        return;
+    }
+    
+    // Submit adjustment (placeholder implementation)
+    fetch(`/vendor/stock/adjust/${itemId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            type: type,
+            quantity: quantity,
+            notes: notes
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Error updating stock');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error updating stock');
+    });
+    
+    closeAdjustModal();
+}
+
+function viewHistory(itemId) {
+    // Placeholder for stock history
+    alert(`Stock history for item ${itemId} - Feature coming soon!`);
+}
+
+function showLowStockReport() {
+    alert('Low Stock Report - Feature coming soon!');
+}
+
+function bulkAdjustment() {
+    alert('Bulk Adjustment - Feature coming soon!');
+}
+
+function exportStock() {
+    alert('Export Stock Data - Feature coming soon!');
+}
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+    const modal = document.getElementById('adjustModal');
+    if (event.target == modal) {
+        closeAdjustModal();
+    }
+}
+</script>
+{% endblock %} 

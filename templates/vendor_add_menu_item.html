@@ -1,0 +1,297 @@
+{% extends "base.html" %}
+
+{% block title %}Add Menu Item - {{ vendor.name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="header-content">
+        <div>
+            <h1><i class="fas fa-plus"></i> Add New Menu Item</h1>
+            <p class="page-subtitle">Add a new item to your menu - {{ vendor.name }}</p>
+        </div>
+        <div class="header-actions">
+            <a href="/vendor/menu" class="btn btn-outline">
+                <i class="fas fa-arrow-left"></i> Back to Menu
+            </a>
+        </div>
+    </div>
+</div>
+
+{% if error %}
+<div class="alert alert-danger">
+    <i class="fas fa-exclamation-triangle"></i> {{ error }}
+</div>
+{% endif %}
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h3><i class="fas fa-utensils"></i> Menu Item Details</h3>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="/vendor/menu/add" id="addMenuItemForm">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label for="name" class="form-label">Item Name *</label>
+                                <input type="text" id="name" name="name" class="form-control" required 
+                                       placeholder="e.g., Chicken Biryani, Margherita Pizza">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="description" class="form-label">Description *</label>
+                        <textarea id="description" name="description" class="form-control" rows="3" required
+                                  placeholder="Describe your dish, ingredients, and what makes it special..."></textarea>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="category" class="form-label">Category *</label>
+                                <select id="category" name="category" class="form-control form-select" required>
+                                    <option value="">Select Category</option>
+                                    <option value="Appetizers">Appetizers</option>
+                                    <option value="Main Course">Main Course</option>
+                                    <option value="Biryani">Biryani</option>
+                                    <option value="Chinese">Chinese</option>
+                                    <option value="South Indian">South Indian</option>
+                                    <option value="North Indian">North Indian</option>
+                                    <option value="Pizza">Pizza</option>
+                                    <option value="Burger">Burger</option>
+                                    <option value="Beverages">Beverages</option>
+                                    <option value="Desserts">Desserts</option>
+                                    <option value="Snacks">Snacks</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="price" class="form-label">Price (₹) *</label>
+                                <input type="number" id="price" name="price" class="form-control" 
+                                       min="1" step="0.01" required placeholder="0.00">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="preparation_time" class="form-label">Preparation Time (minutes)</label>
+                                <input type="number" id="preparation_time" name="preparation_time" class="form-control" 
+                                       min="1" max="120" placeholder="e.g., 15">
+                                <small class="text-muted">How long does it take to prepare this item?</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="image_url" class="form-label">Image URL (Optional)</label>
+                                <input type="url" id="image_url" name="image_url" class="form-control" 
+                                       placeholder="https://example.com/image.jpg">
+                                <small class="text-muted">Add a photo URL to make your item more appealing</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Add Menu Item
+                        </button>
+                        <a href="/vendor/menu" class="btn btn-outline">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h3><i class="fas fa-lightbulb"></i> Tips for Success</h3>
+            </div>
+            <div class="card-body">
+                <div class="tips-list">
+                    <div class="tip-item">
+                        <i class="fas fa-camera text-primary"></i>
+                        <div>
+                            <strong>Add Photos</strong>
+                            <p>Items with photos get 40% more orders</p>
+                        </div>
+                    </div>
+                    
+                    <div class="tip-item">
+                        <i class="fas fa-edit text-success"></i>
+                        <div>
+                            <strong>Detailed Descriptions</strong>
+                            <p>Mention key ingredients and cooking style</p>
+                        </div>
+                    </div>
+                    
+                    <div class="tip-item">
+                        <i class="fas fa-tags text-warning"></i>
+                        <div>
+                            <strong>Competitive Pricing</strong>
+                            <p>Research similar items in your area</p>
+                        </div>
+                    </div>
+                    
+                    <div class="tip-item">
+                        <i class="fas fa-star text-info"></i>
+                        <div>
+                            <strong>Highlight Specials</strong>
+                            <p>Mark popular or signature dishes</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card" style="margin-top: 20px;">
+            <div class="card-header">
+                <h3><i class="fas fa-info-circle"></i> Quick Stats</h3>
+            </div>
+            <div class="card-body">
+                <div class="stat-item">
+                    <label>Current Menu Items</label>
+                    <span class="badge badge-primary">Loading...</span>
+                </div>
+                <div class="stat-item">
+                    <label>Most Popular Category</label>
+                    <span class="text-muted">Main Course</span>
+                </div>
+                <div class="stat-item">
+                    <label>Average Price</label>
+                    <span class="text-muted">₹250</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.form-actions {
+    display: flex;
+    gap: 15px;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-color);
+}
+
+.tips-list .tip-item {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.tips-list .tip-item:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.tips-list .tip-item i {
+    font-size: 1.5rem;
+    margin-top: 5px;
+}
+
+.tips-list .tip-item div {
+    flex: 1;
+}
+
+.tips-list .tip-item strong {
+    display: block;
+    margin-bottom: 5px;
+    color: var(--text-primary);
+}
+
+.tips-list .tip-item p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    line-height: 1.4;
+}
+
+.stat-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.stat-item:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.stat-item label {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-bottom: 0;
+}
+
+@media (max-width: 768px) {
+    .form-actions {
+        flex-direction: column;
+    }
+    
+    .tips-list .tip-item {
+        flex-direction: column;
+        gap: 10px;
+    }
+}
+</style>
+
+<script>
+document.getElementById('addMenuItemForm').addEventListener('submit', function(e) {
+    const price = parseFloat(document.getElementById('price').value);
+    if (price <= 0) {
+        e.preventDefault();
+        alert('Price must be greater than 0');
+        return;
+    }
+    
+    const name = document.getElementById('name').value.trim();
+    if (name.length < 3) {
+        e.preventDefault();
+        alert('Item name must be at least 3 characters long');
+        return;
+    }
+    
+    const description = document.getElementById('description').value.trim();
+    if (description.length < 10) {
+        e.preventDefault();
+        alert('Please provide a more detailed description (at least 10 characters)');
+        return;
+    }
+});
+
+// Auto-generate suggestions based on category
+document.getElementById('category').addEventListener('change', function() {
+    const category = this.value;
+    const nameField = document.getElementById('name');
+    
+    if (!nameField.value && category) {
+        // Provide category-specific suggestions
+        const suggestions = {
+            'Biryani': 'e.g., Chicken Biryani, Mutton Biryani, Veg Biryani',
+            'Pizza': 'e.g., Margherita Pizza, Pepperoni Pizza, Veggie Supreme',
+            'Chinese': 'e.g., Chicken Fried Rice, Hakka Noodles, Manchurian',
+            'South Indian': 'e.g., Masala Dosa, Idli Sambar, Uttapam',
+            'Beverages': 'e.g., Fresh Lime Soda, Lassi, Filter Coffee'
+        };
+        
+        if (suggestions[category]) {
+            nameField.placeholder = suggestions[category];
+        }
+    }
+});
+</script>
+{% endblock %} 

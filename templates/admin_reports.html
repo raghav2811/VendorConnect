@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}System Reports - Admin{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="header-content">
+        <div>
+            <h1><i class="fas fa-chart-bar"></i> System Reports</h1>
+            <p class="page-subtitle">Analytics and insights for the entire platform</p>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h3><i class="fas fa-chart-pie"></i> Platform Overview</h3>
+            </div>
+            <div class="card-body">
+                <div class="report-item">
+                    <label>Total Platform Revenue</label>
+                    <span class="text-success">₹0</span>
+                </div>
+                <div class="report-item">
+                    <label>Total Orders Processed</label>
+                    <span>0</span>
+                </div>
+                <div class="report-item">
+                    <label>Average Order Value</label>
+                    <span>₹0</span>
+                </div>
+                <div class="report-item">
+                    <label>Commission Earned</label>
+                    <span class="text-primary">₹0</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h3><i class="fas fa-users"></i> User Analytics</h3>
+            </div>
+            <div class="card-body">
+                <div class="report-item">
+                    <label>New Users This Month</label>
+                    <span class="text-success">0</span>
+                </div>
+                <div class="report-item">
+                    <label>Active Vendors</label>
+                    <span>0</span>
+                </div>
+                <div class="report-item">
+                    <label>Active Buyers</label>
+                    <span>0</span>
+                </div>
+                <div class="report-item">
+                    <label>User Retention Rate</label>
+                    <span class="text-warning">0%</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card" style="margin-top: 30px;">
+    <div class="card-header">
+        <h3><i class="fas fa-download"></i> Export Reports</h3>
+    </div>
+    <div class="card-body">
+        <div class="export-actions">
+            <button class="btn btn-primary">
+                <i class="fas fa-file-pdf"></i> Export PDF Report
+            </button>
+            <button class="btn btn-success">
+                <i class="fas fa-file-excel"></i> Export Excel
+            </button>
+            <button class="btn btn-info">
+                <i class="fas fa-file-csv"></i> Export CSV
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+.report-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.report-item:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.report-item label {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-bottom: 0;
+}
+
+.export-actions {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+    .export-actions {
+        flex-direction: column;
+    }
+}
+</style>
+{% endblock %} 

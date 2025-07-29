@@ -1,0 +1,410 @@
+{% extends "base.html" %}
+
+{% block title %}Add Stock Item - {{ vendor.name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="header-content">
+        <div>
+            <h1><i class="fas fa-plus"></i> Add Stock Item</h1>
+            <p class="page-subtitle">Add new inventory item to track - {{ vendor.name }}</p>
+        </div>
+        <div class="header-actions">
+            <a href="/vendor/stock" class="btn btn-outline">
+                <i class="fas fa-arrow-left"></i> Back to Inventory
+            </a>
+        </div>
+    </div>
+</div>
+
+{% if error %}
+<div class="alert alert-danger">
+    <i class="fas fa-exclamation-triangle"></i> {{ error }}
+</div>
+{% endif %}
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h3><i class="fas fa-boxes"></i> Stock Item Details</h3>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="/vendor/stock/add" id="addStockForm">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label for="item_name" class="form-label">Item Name *</label>
+                                <input type="text" id="item_name" name="item_name" class="form-control" required 
+                                       placeholder="e.g., Chicken, Rice, Tomatoes, Cooking Oil">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="description" class="form-label">Description *</label>
+                        <textarea id="description" name="description" class="form-control" rows="3" required
+                                  placeholder="Describe the item, brand, quality specifications, etc."></textarea>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="unit" class="form-label">Unit of Measurement *</label>
+                                <select id="unit" name="unit" class="form-control form-select" required>
+                                    <option value="">Select Unit</option>
+                                    <option value="kg">Kilogram (kg)</option>
+                                    <option value="gram">Gram (g)</option>
+                                    <option value="liter">Liter (L)</option>
+                                    <option value="ml">Milliliter (ml)</option>
+                                    <option value="piece">Piece</option>
+                                    <option value="pack">Pack</option>
+                                    <option value="box">Box</option>
+                                    <option value="bottle">Bottle</option>
+                                    <option value="can">Can</option>
+                                    <option value="bag">Bag</option>
+                                    <option value="dozen">Dozen</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="unit_cost" class="form-label">Unit Cost (₹) *</label>
+                                <input type="number" id="unit_cost" name="unit_cost" class="form-control" 
+                                       min="0" step="0.01" required placeholder="0.00">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="minimum_stock" class="form-label">Minimum Stock *</label>
+                                <input type="number" id="minimum_stock" name="minimum_stock" class="form-control" 
+                                       min="1" required value="10" placeholder="10">
+                                <small class="text-muted">Alert threshold for low stock</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="reorder_level" class="form-label">Reorder Level *</label>
+                                <input type="number" id="reorder_level" name="reorder_level" class="form-control" 
+                                       min="1" required value="20" placeholder="20">
+                                <small class="text-muted">When to reorder stock</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="maximum_stock" class="form-label">Maximum Stock *</label>
+                                <input type="number" id="maximum_stock" name="maximum_stock" class="form-control" 
+                                       min="1" required value="1000" placeholder="1000">
+                                <small class="text-muted">Storage capacity limit</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Add Stock Item
+                        </button>
+                        <a href="/vendor/stock" class="btn btn-outline">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h3><i class="fas fa-info-circle"></i> Stock Management Tips</h3>
+            </div>
+            <div class="card-body">
+                <div class="tips-list">
+                    <div class="tip-item">
+                        <i class="fas fa-chart-line text-primary"></i>
+                        <div>
+                            <strong>Set Smart Levels</strong>
+                            <p>Minimum < Reorder < Maximum for optimal inventory management</p>
+                        </div>
+                    </div>
+                    
+                    <div class="tip-item">
+                        <i class="fas fa-clock text-success"></i>
+                        <div>
+                            <strong>Consider Lead Time</strong>
+                            <p>Set reorder level based on delivery time from suppliers</p>
+                        </div>
+                    </div>
+                    
+                    <div class="tip-item">
+                        <i class="fas fa-rupee-sign text-warning"></i>
+                        <div>
+                            <strong>Track Costs</strong>
+                            <p>Include all costs: purchase, transport, storage</p>
+                        </div>
+                    </div>
+                    
+                    <div class="tip-item">
+                        <i class="fas fa-tag text-info"></i>
+                        <div>
+                            <strong>Categorize Items</strong>
+                            <p>Group similar items for easier management</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card" style="margin-top: 20px;">
+            <div class="card-header">
+                <h3><i class="fas fa-calculator"></i> Stock Level Calculator</h3>
+            </div>
+            <div class="card-body">
+                <div class="calculator">
+                    <div class="calc-input">
+                        <label>Daily Usage</label>
+                        <input type="number" id="dailyUsage" placeholder="0" min="0">
+                    </div>
+                    <div class="calc-input">
+                        <label>Supplier Lead Time (days)</label>
+                        <input type="number" id="leadTime" placeholder="0" min="0">
+                    </div>
+                    <div class="calc-input">
+                        <label>Safety Buffer (%)</label>
+                        <input type="number" id="safetyBuffer" placeholder="20" min="0" max="100" value="20">
+                    </div>
+                    <button class="btn btn-info btn-sm" onclick="calculateLevels()">
+                        <i class="fas fa-calculator"></i> Calculate
+                    </button>
+                    <div class="calc-results" id="calcResults" style="display: none;">
+                        <div class="result-item">
+                            <label>Suggested Reorder Level:</label>
+                            <span id="suggestedReorder">0</span>
+                        </div>
+                        <div class="result-item">
+                            <label>Suggested Minimum:</label>
+                            <span id="suggestedMinimum">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.form-actions {
+    display: flex;
+    gap: 15px;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-color);
+}
+
+.tips-list .tip-item {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.tips-list .tip-item:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.tips-list .tip-item i {
+    font-size: 1.5rem;
+    margin-top: 5px;
+}
+
+.tips-list .tip-item div {
+    flex: 1;
+}
+
+.tips-list .tip-item strong {
+    display: block;
+    margin-bottom: 5px;
+    color: var(--text-primary);
+}
+
+.tips-list .tip-item p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    line-height: 1.4;
+}
+
+.calculator {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.calc-input {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.calc-input label {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-bottom: 0;
+}
+
+.calc-input input {
+    padding: 8px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    font-size: 0.9rem;
+}
+
+.calc-results {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 6px;
+    margin-top: 10px;
+}
+
+.result-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.result-item:last-child {
+    margin-bottom: 0;
+}
+
+.result-item label {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-bottom: 0;
+}
+
+.result-item span {
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+@media (max-width: 768px) {
+    .form-actions {
+        flex-direction: column;
+    }
+    
+    .tips-list .tip-item {
+        flex-direction: column;
+        gap: 10px;
+    }
+}
+</style>
+
+<script>
+document.getElementById('addStockForm').addEventListener('submit', function(e) {
+    const itemName = document.getElementById('item_name').value.trim();
+    const description = document.getElementById('description').value.trim();
+    const unitCost = parseFloat(document.getElementById('unit_cost').value);
+    const minStock = parseInt(document.getElementById('minimum_stock').value);
+    const reorderLevel = parseInt(document.getElementById('reorder_level').value);
+    const maxStock = parseInt(document.getElementById('maximum_stock').value);
+    
+    if (itemName.length < 3) {
+        e.preventDefault();
+        alert('Item name must be at least 3 characters long');
+        return;
+    }
+    
+    if (description.length < 10) {
+        e.preventDefault();
+        alert('Please provide a detailed description (at least 10 characters)');
+        return;
+    }
+    
+    if (unitCost <= 0) {
+        e.preventDefault();
+        alert('Unit cost must be greater than 0');
+        return;
+    }
+    
+    if (minStock >= reorderLevel || reorderLevel >= maxStock) {
+        e.preventDefault();
+        alert('Stock levels must follow: Minimum < Reorder < Maximum');
+        return;
+    }
+});
+
+// Auto-update reorder level when minimum stock changes
+document.getElementById('minimum_stock').addEventListener('input', function() {
+    const minStock = parseInt(this.value) || 0;
+    const reorderField = document.getElementById('reorder_level');
+    const currentReorder = parseInt(reorderField.value) || 0;
+    
+    if (currentReorder <= minStock) {
+        reorderField.value = minStock + 10;
+    }
+});
+
+// Auto-update maximum stock when reorder level changes
+document.getElementById('reorder_level').addEventListener('input', function() {
+    const reorderLevel = parseInt(this.value) || 0;
+    const maxField = document.getElementById('maximum_stock');
+    const currentMax = parseInt(maxField.value) || 0;
+    
+    if (currentMax <= reorderLevel) {
+        maxField.value = reorderLevel * 5; // Suggest 5x reorder level
+    }
+});
+
+// Stock level calculator
+function calculateLevels() {
+    const dailyUsage = parseFloat(document.getElementById('dailyUsage').value) || 0;
+    const leadTime = parseFloat(document.getElementById('leadTime').value) || 0;
+    const safetyBuffer = parseFloat(document.getElementById('safetyBuffer').value) || 20;
+    
+    if (dailyUsage <= 0 || leadTime <= 0) {
+        alert('Please enter valid daily usage and lead time values');
+        return;
+    }
+    
+    const baseReorder = dailyUsage * leadTime;
+    const safetyStock = baseReorder * (safetyBuffer / 100);
+    const suggestedReorder = Math.ceil(baseReorder + safetyStock);
+    const suggestedMinimum = Math.ceil(suggestedReorder * 0.5);
+    
+    document.getElementById('suggestedReorder').textContent = suggestedReorder;
+    document.getElementById('suggestedMinimum').textContent = suggestedMinimum;
+    document.getElementById('calcResults').style.display = 'block';
+    
+    // Auto-fill the form fields
+    document.getElementById('minimum_stock').value = suggestedMinimum;
+    document.getElementById('reorder_level').value = suggestedReorder;
+    document.getElementById('maximum_stock').value = suggestedReorder * 3;
+}
+
+// Unit suggestions based on item name
+document.getElementById('item_name').addEventListener('input', function() {
+    const itemName = this.value.toLowerCase();
+    const unitSelect = document.getElementById('unit');
+    
+    if (!unitSelect.value) {
+        if (itemName.includes('oil') || itemName.includes('milk') || itemName.includes('water')) {
+            unitSelect.value = 'liter';
+        } else if (itemName.includes('rice') || itemName.includes('flour') || itemName.includes('sugar')) {
+            unitSelect.value = 'kg';
+        } else if (itemName.includes('spice') || itemName.includes('salt')) {
+            unitSelect.value = 'gram';
+        } else if (itemName.includes('egg') || itemName.includes('chicken') || itemName.includes('fish')) {
+            unitSelect.value = 'kg';
+        } else if (itemName.includes('bottle') || itemName.includes('can')) {
+            unitSelect.value = 'piece';
+        }
+    }
+});
+</script>
+{% endblock %} 

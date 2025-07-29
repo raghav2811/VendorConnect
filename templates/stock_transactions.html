@@ -1,0 +1,335 @@
+{% extends "base.html" %}
+
+{% block title %}Stock Transactions - Vendor Management System{% endblock %}
+
+{% block page_title %}Stock Transactions{% endblock %}
+{% block page_description %}Track all stock movements and transactions{% endblock %}
+
+{% block content %}
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">
+    <!-- Transactions List -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">
+                <i class="fas fa-exchange-alt text-primary"></i>
+                Recent Transactions
+            </h3>
+            <span class="badge badge-primary">{{ transactions|length }} Records</span>
+        </div>
+        
+        {% if transactions %}
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Date/Time</th>
+                            <th>Item</th>
+                            <th>Type</th>
+                            <th>Quantity</th>
+                            <th>Cost</th>
+                            <th>User</th>
+                            <th>Notes</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for txn in transactions %}
+                        <tr>
+                            <td>
+                                {% if txn.created_at %}
+                                    <small>{{ txn.created_at.strftime('%m/%d/%Y') }}</small>
+                                    <br><small class="text-muted">{{ txn.created_at.strftime('%I:%M %p') }}</small>
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if txn.stock %}
+                                    <strong>{{ txn.stock.item_name }}</strong>
+                                    <br><small class="text-muted">{{ txn.stock.unit }}</small>
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if txn.transaction_type == 'in' %}
+                                    <span class="badge badge-success">
+                                        <i class="fas fa-arrow-up"></i> IN
+                                    </span>
+                                {% elif txn.transaction_type == 'out' %}
+                                    <span class="badge badge-danger">
+                                        <i class="fas fa-arrow-down"></i> OUT
+                                    </span>
+                                {% else %}
+                                    <span class="badge badge-warning">
+                                        <i class="fas fa-edit"></i> ADJUST
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <strong>{{ txn.quantity }}</strong>
+                                {% if txn.stock %}
+                                    {{ txn.stock.unit }}
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if txn.total_cost %}
+                                    <strong>${{ "%.2f"|format(txn.total_cost) }}</strong>
+                                    <br><small class="text-muted">${{ "%.2f"|format(txn.unit_cost) }}/unit</small>
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if txn.user %}
+                                    {{ txn.user.full_name }}
+                                    <br><small class="text-muted">{{ txn.user.username }}</small>
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </td>
+                            <td>
+                                <small>{{ txn.notes if txn.notes else 'No notes' }}</small>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center" style="padding: 40px;">
+                <i class="fas fa-exchange-alt" style="font-size: 3rem; color: var(--text-light); margin-bottom: 16px;"></i>
+                <h4>No Transactions Found</h4>
+                <p class="text-muted">Stock transactions will appear here once you start recording them.</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Add New Transaction Form -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">
+                <i class="fas fa-plus text-success"></i>
+                New Transaction
+            </h3>
+        </div>
+        
+        <form method="POST" action="/stock/transactions" id="transactionForm">
+            <div class="form-group">
+                <label for="stock_id" class="form-label">Stock Item *</label>
+                <select id="stock_id" name="stock_id" class="form-control form-select" required>
+                    <option value="">Select Stock Item</option>
+                    {% for item in stock_items %}
+                        <option value="{{ item.id }}">
+                            {{ item.item_name }} ({{ item.current_stock }} {{ item.unit }})
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="transaction_type" class="form-label">Transaction Type *</label>
+                <select id="transaction_type" name="transaction_type" class="form-control form-select" required>
+                    <option value="">Select Type</option>
+                    <option value="in">Stock In (Receive/Purchase)</option>
+                    <option value="out">Stock Out (Use/Sale)</option>
+                    <option value="adjustment">Adjustment (Correction)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="quantity" class="form-label">Quantity *</label>
+                <input 
+                    type="number" 
+                    id="quantity" 
+                    name="quantity" 
+                    class="form-control" 
+                    min="1" 
+                    required 
+                    placeholder="Enter quantity"
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="unit_cost" class="form-label">Unit Cost ($)</label>
+                <input 
+                    type="number" 
+                    id="unit_cost" 
+                    name="unit_cost" 
+                    class="form-control" 
+                    step="0.01" 
+                    min="0" 
+                    placeholder="0.00"
+                    value="0"
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="notes" class="form-label">Notes</label>
+                <textarea 
+                    id="notes" 
+                    name="notes" 
+                    class="form-control" 
+                    rows="3" 
+                    placeholder="Enter any additional notes"
+                ></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-success" style="width: 100%;">
+                <i class="fas fa-plus"></i>
+                Record Transaction
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Transaction Summary -->
+<div class="card" style="margin-top: 20px;">
+    <div class="card-header">
+        <h3 class="card-title">
+            <i class="fas fa-chart-line text-primary"></i>
+            Transaction Summary
+        </h3>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; padding: 20px 0;">
+        <div class="text-center">
+            <div class="stat-number text-success">{{ transactions|selectattr("transaction_type", "eq", "in")|list|length }}</div>
+            <div class="stat-label">Stock In</div>
+        </div>
+        <div class="text-center">
+            <div class="stat-number text-danger">{{ transactions|selectattr("transaction_type", "eq", "out")|list|length }}</div>
+            <div class="stat-label">Stock Out</div>
+        </div>
+        <div class="text-center">
+            <div class="stat-number text-warning">{{ transactions|selectattr("transaction_type", "eq", "adjustment")|list|length }}</div>
+            <div class="stat-label">Adjustments</div>
+        </div>
+        <div class="text-center">
+            <div class="stat-number text-primary">
+                {% if transactions %}
+                    ${{ "%.2f"|format(transactions|selectattr("total_cost")|map(attribute="total_cost")|sum) }}
+                {% else %}
+                    $0.00
+                {% endif %}
+            </div>
+            <div class="stat-label">Total Value</div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity Chart (Placeholder) -->
+<div class="card" style="margin-top: 20px;">
+    <div class="card-header">
+        <h3 class="card-title">
+            <i class="fas fa-chart-area text-primary"></i>
+            Transaction Activity
+        </h3>
+    </div>
+    <div style="padding: 40px; text-center;">
+        <i class="fas fa-chart-area" style="font-size: 3rem; color: var(--text-light); margin-bottom: 16px;"></i>
+        <h4>Transaction Charts</h4>
+        <p class="text-muted">Visual transaction analytics will be available in the next version.</p>
+        <div style="margin-top: 20px;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;">
+                <div class="text-center">
+                    <h5>Today</h5>
+                    <div class="stat-number text-primary">{{ transactions|selectattr("created_at")|list|length if transactions else 0 }}</div>
+                    <small class="text-muted">Transactions</small>
+                </div>
+                <div class="text-center">
+                    <h5>This Week</h5>
+                    <div class="stat-number text-success">{{ transactions|list|length }}</div>
+                    <small class="text-muted">Total</small>
+                </div>
+                <div class="text-center">
+                    <h5>Most Active</h5>
+                    <div class="stat-number text-warning">
+                        {% if stock_items %}
+                            {% set most_active = stock_items|first %}
+                            {{ most_active.item_name[:10] }}...
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </div>
+                    <small class="text-muted">Item</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Form validation
+    document.getElementById('transactionForm').addEventListener('submit', function(e) {
+        const form = e.target;
+        const inputs = form.querySelectorAll('input[required], select[required]');
+        let isValid = true;
+
+        inputs.forEach(input => {
+            if (!input.value.trim()) {
+                input.style.borderColor = 'var(--danger-color)';
+                isValid = false;
+            } else {
+                input.style.borderColor = 'var(--border-color)';
+            }
+        });
+
+        if (!isValid) {
+            e.preventDefault();
+            alert('Please fill in all required fields.');
+        }
+    });
+
+    // Auto-calculate total cost
+    document.getElementById('quantity').addEventListener('input', calculateTotal);
+    document.getElementById('unit_cost').addEventListener('input', calculateTotal);
+
+    function calculateTotal() {
+        const quantity = parseFloat(document.getElementById('quantity').value) || 0;
+        const unitCost = parseFloat(document.getElementById('unit_cost').value) || 0;
+        const total = quantity * unitCost;
+        
+        // Display total in a helper text (you could add this to the form)
+        console.log(`Total Cost: $${total.toFixed(2)}`);
+    }
+
+    // Transaction type change handler
+    document.getElementById('transaction_type').addEventListener('change', function() {
+        const type = this.value;
+        const quantityInput = document.getElementById('quantity');
+        const notesInput = document.getElementById('notes');
+        
+        if (type === 'out') {
+            quantityInput.placeholder = 'Quantity to remove';
+            notesInput.placeholder = 'Reason for stock removal...';
+        } else if (type === 'in') {
+            quantityInput.placeholder = 'Quantity to add';
+            notesInput.placeholder = 'Purchase order reference, supplier info...';
+        } else if (type === 'adjustment') {
+            quantityInput.placeholder = 'New absolute quantity';
+            notesInput.placeholder = 'Reason for adjustment...';
+        }
+    });
+
+    // Stock item selection handler
+    document.getElementById('stock_id').addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        if (selectedOption.value) {
+            // Extract current stock from option text and show warning if needed
+            const optionText = selectedOption.textContent;
+            const currentStock = parseInt(optionText.match(/\((\d+)/)[1]);
+            
+            if (currentStock <= 10) {
+                alert(`Warning: This item has low stock (${currentStock} units)`);
+            }
+        }
+    });
+
+    // Auto-refresh transactions every 30 seconds
+    setInterval(function() {
+        // In a real implementation, this would fetch new transactions via AJAX
+        console.log('Auto-refresh transactions (would implement AJAX here)');
+    }, 30000);
+</script>
+{% endblock %} 

@@ -1,0 +1,424 @@
+{% extends "base.html" %}
+
+{% block title %}Browse Vendors - Buyer Dashboard{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="header-content">
+        <div>
+            <h1><i class="fas fa-shopping-cart"></i> Welcome, {{ user.full_name }}!</h1>
+            <p class="page-subtitle">Discover delicious food from local vendors</p>
+        </div>
+        <div class="header-actions">
+            <a href="/buyer/orders" class="btn btn-primary btn-sm">
+                <i class="fas fa-list"></i> My Orders
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Search and Filters -->
+<div class="card" style="margin-bottom: 30px;">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <input type="text" class="form-control" placeholder="Search vendors or food items..." id="searchInput">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <select class="form-control form-select" id="categoryFilter">
+                    <option value="">All Categories</option>
+                    <option value="Restaurant">Restaurant</option>
+                    <option value="Fast Food">Fast Food</option>
+                    <option value="Cafe">Cafe</option>
+                    <option value="Bakery">Bakery</option>
+                    <option value="Grocery">Grocery Store</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <button class="btn btn-primary" onclick="applyFilters()">
+                    <i class="fas fa-search"></i> Search
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Vendors Grid -->
+{% if vendors %}
+<div class="vendors-grid" id="vendorsGrid">
+    {% for vendor in vendors %}
+    <div class="vendor-card" data-category="{{ vendor.business_type }}" data-name="{{ vendor.name.lower() }}">
+        <div class="vendor-image">
+            <i class="fas fa-store vendor-icon"></i>
+        </div>
+        
+        <div class="vendor-content">
+            <h3 class="vendor-name">{{ vendor.name }}</h3>
+            <p class="vendor-type">
+                <i class="fas fa-tag"></i> {{ vendor.business_type }}
+            </p>
+            
+            {% if vendor.description %}
+            <p class="vendor-description">{{ vendor.description[:100] }}{% if vendor.description|length > 100 %}...{% endif %}</p>
+            {% endif %}
+            
+            <div class="vendor-info">
+                <div class="info-item">
+                    <i class="fas fa-phone"></i>
+                    <span>{{ vendor.phone }}</span>
+                </div>
+                <div class="info-item">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span>{{ vendor.address[:50] }}{% if vendor.address|length > 50 %}...{% endif %}</span>
+                </div>
+            </div>
+            
+            <div class="vendor-actions">
+                <a href="/buyer/vendor/{{ vendor.id }}" class="btn btn-primary">
+                    <i class="fas fa-utensils"></i> View Menu
+                </a>
+                <button class="btn btn-outline" onclick="showVendorDetails({{ vendor.id }})">
+                    <i class="fas fa-info-circle"></i> Details
+                </button>
+            </div>
+        </div>
+        
+        <div class="vendor-status">
+            <span class="badge badge-success">
+                <i class="fas fa-check-circle"></i> Open
+            </span>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <div class="empty-icon">
+        <i class="fas fa-store-slash"></i>
+    </div>
+    <h3>No Vendors Available</h3>
+    <p>There are currently no approved vendors in our system. Please check back later!</p>
+</div>
+{% endif %}
+
+<!-- Quick Stats -->
+<div class="stats-section" style="margin-top: 40px;">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="stat-content">
+                    <div class="stat-number">{{ vendors|length }}</div>
+                    <div class="stat-label">Available Vendors</div>
+                </div>
+                <div class="stat-icon">
+                    <i class="fas fa-store"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="stat-content">
+                    <div class="stat-number">0</div>
+                    <div class="stat-label">Your Orders</div>
+                </div>
+                <div class="stat-icon">
+                    <i class="fas fa-shopping-bag"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="stat-content">
+                    <div class="stat-number">₹0</div>
+                    <div class="stat-label">Total Spent</div>
+                </div>
+                <div class="stat-icon">
+                    <i class="fas fa-rupee-sign"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Vendor Details Modal -->
+<div id="vendorModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="modalVendorName">Vendor Details</h3>
+            <span class="close" onclick="closeVendorModal()">&times;</span>
+        </div>
+        <div class="modal-body" id="modalVendorBody">
+            <!-- Content will be populated by JavaScript -->
+        </div>
+    </div>
+</div>
+
+<style>
+.vendors-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 25px;
+    margin-bottom: 30px;
+}
+
+.vendor-card {
+    background: var(--glass-gradient);
+    backdrop-filter: blur(var(--backdrop-blur));
+    -webkit-backdrop-filter: blur(var(--backdrop-blur));
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.vendor-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.05), transparent);
+    pointer-events: none;
+    z-index: 1;
+}
+
+.vendor-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: var(--shadow-lg), var(--glow);
+    border-color: rgba(139, 92, 246, 0.3);
+}
+
+.vendor-image {
+    height: 120px;
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    z-index: 2;
+}
+
+.vendor-icon {
+    font-size: 3rem;
+    color: white;
+}
+
+.vendor-status {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+}
+
+.vendor-content {
+    padding: 20px;
+    position: relative;
+    z-index: 2;
+}
+
+.vendor-name {
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--text-primary);
+}
+
+.vendor-type {
+    color: var(--primary-color);
+    font-weight: 500;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.vendor-description {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin-bottom: 15px;
+    line-height: 1.4;
+}
+
+.vendor-info {
+    margin-bottom: 20px;
+}
+
+.info-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.info-item i {
+    width: 16px;
+    color: var(--primary-color);
+}
+
+.vendor-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.vendor-actions .btn {
+    flex: 1;
+    font-size: 0.9rem;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-muted);
+}
+
+.empty-icon {
+    font-size: 4rem;
+    margin-bottom: 20px;
+    color: var(--border-color);
+}
+
+.stats-section .stat-card {
+    height: auto;
+    min-height: 120px;
+}
+
+/* Modal Styles */
+.modal {
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+}
+
+.modal-content {
+    background: var(--glass-gradient);
+    backdrop-filter: blur(var(--backdrop-blur));
+    -webkit-backdrop-filter: blur(var(--backdrop-blur));
+    border: 1px solid var(--border-color);
+    margin: auto;
+    padding: 0;
+    border-radius: 24px;
+    width: 90%;
+    max-width: 500px;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: var(--shadow-lg);
+}
+
+.modal-header {
+    padding: 20px;
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+    color: white;
+    border-radius: 24px 24px 0 0;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-body {
+    padding: 20px;
+}
+
+.close {
+    color: var(--text-muted);
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close:hover {
+    color: var(--text-primary);
+}
+
+@media (max-width: 768px) {
+    .vendors-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .vendor-actions {
+        flex-direction: column;
+    }
+    
+    .stats-section .row {
+        gap: 15px;
+    }
+}
+</style>
+
+<script>
+function applyFilters() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const categoryFilter = document.getElementById('categoryFilter').value;
+    const vendorCards = document.querySelectorAll('.vendor-card');
+    
+    vendorCards.forEach(card => {
+        const vendorName = card.getAttribute('data-name');
+        const vendorCategory = card.getAttribute('data-category');
+        
+        const matchesSearch = !searchTerm || vendorName.includes(searchTerm);
+        const matchesCategory = !categoryFilter || vendorCategory === categoryFilter;
+        
+        if (matchesSearch && matchesCategory) {
+            card.style.display = 'block';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+}
+
+// Real-time search
+document.getElementById('searchInput').addEventListener('input', applyFilters);
+document.getElementById('categoryFilter').addEventListener('change', applyFilters);
+
+function showVendorDetails(vendorId) {
+    // In a real implementation, you'd fetch vendor details via AJAX
+    // For now, we'll show a placeholder
+    const modal = document.getElementById('vendorModal');
+    const modalBody = document.getElementById('modalVendorBody');
+    
+    modalBody.innerHTML = `
+        <p><strong>Vendor ID:</strong> ${vendorId}</p>
+        <p><strong>Status:</strong> Open for orders</p>
+        <p><strong>Delivery Time:</strong> 30-45 minutes</p>
+        <p><strong>Minimum Order:</strong> ₹200</p>
+        <p><strong>Payment Methods:</strong> Cash, UPI, Card</p>
+        <div style="margin-top: 20px;">
+            <a href="/buyer/vendor/${vendorId}" class="btn btn-primary">
+                <i class="fas fa-utensils"></i> View Full Menu
+            </a>
+        </div>
+    `;
+    
+    modal.style.display = 'flex';
+}
+
+function closeVendorModal() {
+    document.getElementById('vendorModal').style.display = 'none';
+}
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+    const modal = document.getElementById('vendorModal');
+    if (event.target == modal) {
+        modal.style.display = 'none';
+    }
+}
+</script>
+{% endblock %} 

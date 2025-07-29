@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buyer Registration - Vendor Management System</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='/css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-card" style="max-width: 500px;">
+            <div class="login-header">
+                <h1><i class="fas fa-shopping-cart"></i> Join as Buyer</h1>
+                <p>Start ordering from your favorite vendors</p>
+            </div>
+
+            {% if error %}
+                <div class="alert alert-danger">
+                    {{ error }}
+                </div>
+            {% endif %}
+
+            <form method="POST" action="/register/buyer" id="buyerForm">
+                <div class="form-group">
+                    <label for="username" class="form-label">
+                        <i class="fas fa-user"></i> Username *
+                    </label>
+                    <input 
+                        type="text" 
+                        id="username" 
+                        name="username" 
+                        class="form-control" 
+                        required 
+                        placeholder="Choose a username"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="email" class="form-label">
+                        <i class="fas fa-envelope"></i> Email Address *
+                    </label>
+                    <input 
+                        type="email" 
+                        id="email" 
+                        name="email" 
+                        class="form-control" 
+                        required 
+                        placeholder="your.email@example.com"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="full_name" class="form-label">
+                        <i class="fas fa-id-card"></i> Full Name *
+                    </label>
+                    <input 
+                        type="text" 
+                        id="full_name" 
+                        name="full_name" 
+                        class="form-control" 
+                        required 
+                        placeholder="Your full name"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="phone" class="form-label">
+                        <i class="fas fa-phone"></i> Phone Number
+                    </label>
+                    <input 
+                        type="tel" 
+                        id="phone" 
+                        name="phone" 
+                        class="form-control" 
+                        placeholder="Your phone number"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="address" class="form-label">
+                        <i class="fas fa-map-marker-alt"></i> Delivery Address
+                    </label>
+                    <textarea 
+                        id="address" 
+                        name="address" 
+                        class="form-control" 
+                        rows="3" 
+                        placeholder="Your delivery address"
+                    ></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="password" class="form-label">
+                        <i class="fas fa-lock"></i> Password *
+                    </label>
+                    <input 
+                        type="password" 
+                        id="password" 
+                        name="password" 
+                        class="form-control" 
+                        required 
+                        placeholder="Choose a strong password"
+                        minlength="6"
+                    >
+                </div>
+
+                <button type="submit" class="btn btn-success" style="width: 100%; margin-top: 24px;">
+                    <i class="fas fa-user-plus"></i>
+                    Create Buyer Account
+                </button>
+            </form>
+
+            <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--border-color); text-align: center;">
+                <p class="text-muted" style="font-size: 0.9rem;">
+                    Already have an account? 
+                    <a href="/login" style="color: var(--primary-color); text-decoration: none;">
+                        <strong>Sign In</strong>
+                    </a>
+                </p>
+                <p class="text-muted" style="font-size: 0.85rem;">
+                    Want to sell instead? 
+                    <a href="/register/vendor" style="color: var(--warning-color); text-decoration: none;">
+                        Register as Vendor
+                    </a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('buyerForm').addEventListener('submit', function(e) {
+            const password = document.getElementById('password').value;
+            if (password.length < 6) {
+                e.preventDefault();
+                alert('Password must be at least 6 characters long.');
+                return;
+            }
+        });
+    </script>
+</body>
+</html> 

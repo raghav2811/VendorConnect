@@ -1,0 +1,365 @@
+{% extends "base.html" %}
+
+{% block title %}My Favorites - {{ user.full_name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="header-content">
+        <div>
+            <h1><i class="fas fa-heart"></i> My Favorites</h1>
+            <p class="page-subtitle">Your favorite restaurants and dishes</p>
+        </div>
+        <div class="header-actions">
+            <a href="/buyer/dashboard" class="btn btn-outline">
+                <i class="fas fa-arrow-left"></i> Back to Browse
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Favorites Tabs -->
+<div class="favorites-tabs">
+    <button class="tab-btn active" data-tab="restaurants">
+        <i class="fas fa-store"></i> Restaurants
+    </button>
+    <button class="tab-btn" data-tab="dishes">
+        <i class="fas fa-utensils"></i> Dishes
+    </button>
+</div>
+
+<!-- Restaurants Tab -->
+<div id="restaurants-tab" class="tab-content active">
+    {% if favorites %}
+    <div class="favorites-grid">
+        {% for restaurant in favorites %}
+        <div class="favorite-card">
+            <div class="card-header">
+                <h3>{{ restaurant.name }}</h3>
+                <button class="remove-favorite" onclick="removeFavorite('restaurant', {{ restaurant.id }})">
+                    <i class="fas fa-heart"></i>
+                </button>
+            </div>
+            <div class="card-body">
+                <p class="description">{{ restaurant.description or 'Great food and service' }}</p>
+                <div class="restaurant-meta">
+                    <div class="meta-item">
+                        <i class="fas fa-star"></i>
+                        <span>4.5 rating</span>
+                    </div>
+                    <div class="meta-item">
+                        <i class="fas fa-clock"></i>
+                        <span>30-45 min</span>
+                    </div>
+                    <div class="meta-item">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>{{ restaurant.address }}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="card-actions">
+                <a href="/buyer/vendor/{{ restaurant.id }}" class="btn btn-primary">
+                    <i class="fas fa-utensils"></i> View Menu
+                </a>
+                <button class="btn btn-outline" onclick="orderAgain({{ restaurant.id }})">
+                    <i class="fas fa-redo"></i> Order Again
+                </button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">
+            <i class="fas fa-heart"></i>
+        </div>
+        <h3>No Favorite Restaurants</h3>
+        <p>Start exploring and add restaurants to your favorites!</p>
+        <a href="/buyer/dashboard" class="btn btn-primary">
+            <i class="fas fa-search"></i> Browse Restaurants
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Dishes Tab -->
+<div id="dishes-tab" class="tab-content">
+    <div class="dishes-grid">
+        <!-- Sample dishes for now -->
+        <div class="dish-card">
+            <div class="dish-image">
+                <i class="fas fa-utensils"></i>
+            </div>
+            <div class="dish-info">
+                <h4>Chicken Biryani</h4>
+                <p class="restaurant-name">Spice Garden</p>
+                <p class="price">₹250</p>
+            </div>
+            <div class="dish-actions">
+                <button class="btn btn-primary btn-sm" onclick="addToCart(1)">
+                    <i class="fas fa-plus"></i> Add to Cart
+                </button>
+                <button class="remove-favorite" onclick="removeFavorite('dish', 1)">
+                    <i class="fas fa-heart"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="empty-state" style="display: none;">
+        <div class="empty-icon">
+            <i class="fas fa-utensils"></i>
+        </div>
+        <h3>No Favorite Dishes</h3>
+        <p>Add dishes to your favorites while browsing restaurant menus!</p>
+    </div>
+</div>
+
+<style>
+.favorites-tabs {
+    display: flex;
+    gap: 10px;
+    margin: 20px 0;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+.tab-btn {
+    padding: 12px 24px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-size: 1rem;
+    color: var(--text-muted);
+    border-bottom: 2px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.tab-btn.active {
+    color: var(--primary-color);
+    border-bottom-color: var(--primary-color);
+}
+
+.tab-content {
+    display: none;
+    margin-top: 20px;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+.favorites-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.favorite-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    position: relative;
+}
+
+.favorite-card .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 15px;
+}
+
+.favorite-card h3 {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 1.2rem;
+}
+
+.remove-favorite {
+    background: none;
+    border: none;
+    color: #e74c3c;
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 50%;
+    transition: background 0.3s ease;
+}
+
+.remove-favorite:hover {
+    background: rgba(231, 76, 60, 0.1);
+}
+
+.description {
+    color: var(--text-muted);
+    margin-bottom: 15px;
+    line-height: 1.4;
+}
+
+.restaurant-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 15px;
+}
+
+.meta-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.meta-item i {
+    width: 16px;
+    color: var(--primary-color);
+}
+
+.card-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.dishes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.dish-card {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    position: relative;
+}
+
+.dish-image {
+    height: 150px;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 2rem;
+}
+
+.dish-info {
+    padding: 15px;
+}
+
+.dish-info h4 {
+    margin: 0 0 5px 0;
+    color: var(--text-primary);
+    font-size: 1.1rem;
+}
+
+.restaurant-name {
+    margin: 0 0 10px 0;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.price {
+    margin: 0;
+    color: var(--success-color);
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.dish-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    border-top: 1px solid #f0f0f0;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+}
+
+.empty-icon {
+    font-size: 4rem;
+    color: var(--border-color);
+    margin-bottom: 20px;
+}
+
+@media (max-width: 768px) {
+    .favorites-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .dishes-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .card-actions {
+        flex-direction: column;
+    }
+    
+    .dish-actions {
+        flex-direction: column;
+        gap: 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    .dishes-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+
+<script>
+// Tab switching
+document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const tabId = this.dataset.tab;
+        
+        // Update active tab button
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        
+        // Update active tab content
+        document.querySelectorAll('.tab-content').forEach(content => {
+            content.classList.remove('active');
+        });
+        document.getElementById(`${tabId}-tab`).classList.add('active');
+    });
+});
+
+function removeFavorite(type, id) {
+    if (confirm(`Remove this ${type} from favorites?`)) {
+        // API call to remove favorite
+        fetch(`/buyer/favorites/${type}/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error removing from favorites');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error removing from favorites');
+        });
+    }
+}
+
+function orderAgain(restaurantId) {
+    window.location.href = `/buyer/vendor/${restaurantId}`;
+}
+
+function addToCart(dishId) {
+    alert(`Add dish #${dishId} to cart - Feature coming soon!`);
+}
+</script>
+{% endblock %} 

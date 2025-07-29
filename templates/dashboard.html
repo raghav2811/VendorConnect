@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Vendor Management System{% endblock %}
+
+{% block page_title %}Dashboard{% endblock %}
+{% block page_description %}Overview of your vendor management system{% endblock %}
+
+{% block content %}
+<!-- Statistics Cards -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-number">{{ vendors_count }}</div>
+        <div class="stat-label">Active Vendors</div>
+    </div>
+    <div class="stat-card success">
+        <div class="stat-number">{{ menu_items_count }}</div>
+        <div class="stat-label">Menu Items</div>
+    </div>
+    <div class="stat-card warning">
+        <div class="stat-number">${{ "%.2f"|format(total_stock_value) }}</div>
+        <div class="stat-label">Total Stock Value</div>
+    </div>
+    <div class="stat-card danger">
+        <div class="stat-number">{{ low_stock_items|length }}</div>
+        <div class="stat-label">Low Stock Items</div>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">
+    <!-- Low Stock Alert -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">
+                <i class="fas fa-exclamation-triangle text-warning"></i>
+                Low Stock Alerts
+            </h3>
+            <a href="/admin/stock" class="btn btn-outline btn-sm">View All Stock</a>
+        </div>
+        
+        {% if low_stock_items %}
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Item Name</th>
+                            <th>Current Stock</th>
+                            <th>Reorder Level</th>
+                            <th>Vendor</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in low_stock_items[:10] %}
+                        <tr>
+                            <td>
+                                <strong>{{ item.item_name }}</strong>
+                                <br><small class="text-muted">{{ item.description }}</small>
+                            </td>
+                            <td>
+                                <span class="badge badge-{{ 'danger' if item.current_stock == 0 else 'warning' }}">
+                                    {{ item.current_stock }} {{ item.unit }}
+                                </span>
+                            </td>
+                            <td>{{ item.reorder_level }} {{ item.unit }}</td>
+                            <td>
+                                {% if item.vendor %}
+                                    {{ item.vendor.name }}
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if item.current_stock == 0 %}
+                                    <span class="badge badge-danger">Out of Stock</span>
+                                {% else %}
+                                    <span class="badge badge-warning">Low Stock</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center" style="padding: 40px;">
+                <i class="fas fa-check-circle text-success" style="font-size: 3rem; margin-bottom: 16px;"></i>
+                <h4 class="text-success">All Stock Levels Good!</h4>
+                <p class="text-muted">No items are currently below reorder level.</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">
+                <i class="fas fa-bolt text-primary"></i>
+                Quick Actions
+            </h3>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+            <a href="/admin/vendors" class="btn btn-outline">
+                <i class="fas fa-building"></i>
+                Manage Vendors
+            </a>
+            <a href="/admin/approvals" class="btn btn-outline">
+                <i class="fas fa-check-circle"></i>
+                Vendor Approvals
+            </a>
+            <a href="/admin/users" class="btn btn-outline">
+                <i class="fas fa-users"></i>
+                User Management
+            </a>
+            <a href="/admin/orders" class="btn btn-outline">
+                <i class="fas fa-shopping-cart"></i>
+                All Orders
+            </a>
+            <a href="/admin/reports" class="btn btn-outline">
+                <i class="fas fa-chart-bar"></i>
+                System Reports
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity -->
+<div class="card" style="margin-top: 20px;">
+    <div class="card-header">
+        <h3 class="card-title">
+            <i class="fas fa-clock text-primary"></i>
+            System Overview
+        </h3>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; padding: 20px 0;">
+        <div class="text-center">
+            <div style="font-size: 2rem; color: var(--primary-color); margin-bottom: 8px;">
+                <i class="fas fa-store"></i>
+            </div>
+            <h4>Vendor Management</h4>
+            <p class="text-muted">Track and manage all your vendor relationships in one place.</p>
+        </div>
+        <div class="text-center">
+            <div style="font-size: 2rem; color: var(--success-color); margin-bottom: 8px;">
+                <i class="fas fa-inventory"></i>
+            </div>
+            <h4>Stock Control</h4>
+            <p class="text-muted">Real-time inventory tracking with automated reorder alerts.</p>
+        </div>
+        <div class="text-center">
+            <div style="font-size: 2rem; color: var(--warning-color); margin-bottom: 8px;">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <h4>Analytics</h4>
+            <p class="text-muted">Comprehensive reports and insights for better decision making.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Auto-refresh dashboard every 5 minutes
+    setTimeout(function() {
+        location.reload();
+    }, 300000); // 5 minutes
+</script>
+{% endblock %} 

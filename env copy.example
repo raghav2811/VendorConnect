@@ -1,0 +1,24 @@
+# Supabase Configuration
+SUPABASE_URL=your_supabase_project_url
+SUPABASE_ANON_KEY=your_supabase_anon_key
+
+# JWT Secret Key (change this to a secure random string)
+SECRET_KEY=your-super-secret-jwt-key-change-this-in-production
+
+# Database Configuration (if needed for additional setup)
+DATABASE_URL=postgresql://username:password@localhost:5432/vendor_management
+
+# Application Settings
+DEBUG=True
+HOST=0.0.0.0
+PORT=8000
+
+# Email Configuration (for future email notifications)
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USERNAME=your_email@gmail.com
+SMTP_PASSWORD=your_app_password
+
+# File Upload Settings
+MAX_FILE_SIZE=5242880  # 5MB in bytes
+UPLOAD_DIR=uploads/ 

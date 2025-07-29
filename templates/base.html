@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Vendor Management System{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='/css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <div class="main-wrapper">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-logo">
+                <h2><i class="fas fa-store"></i> VendorMS</h2>
+            </div>
+            <ul class="sidebar-nav">
+                <!-- Dashboard - Common for all roles -->
+                <li>
+                    <a href="/" class="{% if request.url.path == '/' %}active{% endif %}">
+                        <i class="fas fa-tachometer-alt icon"></i>
+                        Dashboard
+                    </a>
+                </li>
+
+                <!-- Admin Navigation -->
+                {% if user and user.role == 'admin' %}
+                <li>
+                    <a href="/admin/vendors" class="{% if '/admin/vendors' in request.url.path %}active{% endif %}">
+                        <i class="fas fa-building icon"></i>
+                        Vendor Management
+                    </a>
+                </li>
+                <li>
+                    <a href="/admin/approvals" class="{% if '/admin/approvals' in request.url.path %}active{% endif %}">
+                        <i class="fas fa-check-circle icon"></i>
+                        Vendor Approvals
+                    </a>
+                </li>
+                <li>
+                    <a href="/admin/users" class="{% if '/admin/users' in request.url.path %}active{% endif %}">
+                        <i class="fas fa-users icon"></i>
+                        User Management
+                    </a>
+                </li>
+                <li>
+                    <a href="/admin/menu" class="{% if '/admin/menu' in request.url.path %}active{% endif %}">
+                        <i class="fas fa-utensils icon"></i>
+                        All Menu Items
+                    </a>
+                </li>
+                <li>
+                    <a href="/admin/stock" class="{% if '/admin/stock' in request.url.path %}active{% endif %}">
+                        <i class="fas fa-boxes icon"></i>
+                        All Stock
+                    </a>
+                </li>
+                <li>
+                    <a href="/admin/orders" class="{% if '/admin/orders' in request.url.path %}active{% endif %}">
+                        <i class="fas fa-shopping-cart icon"></i>
+                        All Orders
+                    </a>
+                </li>
+                <li>
+                    <a href="/admin/reports" class="{% if '/admin/reports' in request.url.path %}active{% endif %}">
+                        <i class="fas fa-chart-bar icon"></i>
+                        Reports & Analytics
+                    </a>
+                </li>
+                {% endif %}
+
+                <!-- Vendor Navigation -->
+                {% if user and user.role == 'vendor' %}
+                <li>
+                    <a href="/vendor/profile" class="{% if '/vendor/profile' in request.url.path %}active{% endif %}">
+                        <i class="fas fa-store icon"></i>
+                        My Business
+                    </a>
+                </li>
+                <li>
+                    <a href="/vendor/menu" class="{% if '/vendor/menu' in request.url.path %}active{% endif %}">
+                        <i class="fas fa-utensils icon"></i>
+                        My Menu
+                    </a>
+                </li>
+                <li>
+                    <a href="/vendor/stock" class="{% if '/vendor/stock' in request.url.path %}active{% endif %}">
+                        <i class="fas fa-boxes icon"></i>
+                        My Inventory
+                    </a>
+                </li>
+                <li>
+                    <a href="/vendor/orders" class="{% if '/vendor/orders' in request.url.path %}active{% endif %}">
+                        <i class="fas fa-shopping-bag icon"></i>
+                        My Orders
+                    </a>
+                </li>
+                <li>
+                    <a href="/vendor/analytics" class="{% if '/vendor/analytics' in request.url.path %}active{% endif %}">
+                        <i class="fas fa-chart-line icon"></i>
+                        Sales Analytics
+                    </a>
+                </li>
+                {% endif %}
+
+                <!-- Buyer Navigation -->
+                {% if user and user.role == 'buyer' %}
+                <li>
+                    <a href="/buyer/browse" class="{% if '/buyer/browse' in request.url.path %}active{% endif %}">
+                        <i class="fas fa-search icon"></i>
+                        Browse Vendors
+                    </a>
+                </li>
+                <li>
+                    <a href="/buyer/orders" class="{% if '/buyer/orders' in request.url.path %}active{% endif %}">
+                        <i class="fas fa-shopping-bag icon"></i>
+                        My Orders
+                    </a>
+                </li>
+                <li>
+                    <a href="/buyer/favorites" class="{% if '/buyer/favorites' in request.url.path %}active{% endif %}">
+                        <i class="fas fa-heart icon"></i>
+                        Favorites
+                    </a>
+                </li>
+                <li>
+                    <a href="/buyer/profile" class="{% if '/buyer/profile' in request.url.path %}active{% endif %}">
+                        <i class="fas fa-user icon"></i>
+                        My Profile
+                    </a>
+                </li>
+                {% endif %}
+
+                <!-- Logout - Common for all roles -->
+                <li style="margin-top: 30px; border-top: 1px solid var(--border-color); padding-top: 20px;">
+                    <a href="/logout">
+                        <i class="fas fa-sign-out-alt icon"></i>
+                        Logout
+                    </a>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div>
+                    <h1>{% block page_title %}Dashboard{% endblock %}</h1>
+                    <p class="text-muted">{% block page_description %}Welcome to your vendor management system{% endblock %}</p>
+                </div>
+                {% if user %}
+                <div class="user-info">
+                    <div class="user-avatar">
+                        {{ user.full_name[0].upper() }}
+                    </div>
+                    <div class="user-details">
+                        <h4>{{ user.full_name }}</h4>
+                        <p>{{ user.role.title() }}</p>
+                    </div>
+                </div>
+                {% endif %}
+            </header>
+
+            <!-- Flash Messages -->
+            <!-- Note: Flash messages can be implemented here if needed -->
+
+            <!-- Page Content -->
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <!-- Mobile Menu Toggle -->
+    <button class="mobile-menu-toggle d-none" id="mobileMenuToggle">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <script>
+        // Mobile menu toggle
+        document.addEventListener('DOMContentLoaded', function() {
+            const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+            const sidebar = document.getElementById('sidebar');
+
+            if (mobileMenuToggle) {
+                mobileMenuToggle.addEventListener('click', function() {
+                    sidebar.classList.toggle('show');
+                });
+            }
+
+            // Close sidebar on mobile when clicking outside
+            document.addEventListener('click', function(e) {
+                if (window.innerWidth <= 768 && !sidebar.contains(e.target) && !mobileMenuToggle.contains(e.target)) {
+                    sidebar.classList.remove('show');
+                }
+            });
+        });
+
+        // Auto-hide alerts after 5 seconds
+        document.addEventListener('DOMContentLoaded', function() {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                setTimeout(() => {
+                    alert.style.opacity = '0';
+                    setTimeout(() => {
+                        alert.remove();
+                    }, 300);
+                }, 5000);
+            });
+        });
+    </script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html> 

@@ -1,0 +1,327 @@
+{% extends "base.html" %}
+
+{% block title %}Stock Management - Vendor Management System{% endblock %}
+
+{% block page_title %}Stock Management{% endblock %}
+{% block page_description %}Manage inventory and stock levels{% endblock %}
+
+{% block content %}
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">
+    <!-- Stock Items List -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">
+                <i class="fas fa-boxes text-primary"></i>
+                Stock Items
+            </h3>
+            <span class="badge badge-primary">{{ stock_items|length }} Items</span>
+        </div>
+        
+        {% if stock_items %}
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Item Details</th>
+                            <th>Current Stock</th>
+                            <th>Unit Cost</th>
+                            <th>Vendor</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in stock_items %}
+                        <tr>
+                            <td>
+                                <strong>{{ item.item_name }}</strong>
+                                <br><small class="text-muted">{{ item.description }}</small>
+                                <br><small class="text-primary">Reorder at: {{ item.reorder_level }} {{ item.unit }}</small>
+                            </td>
+                            <td>
+                                <span class="badge badge-{{ 'danger' if item.current_stock == 0 else ('warning' if item.current_stock <= item.reorder_level else 'success') }}">
+                                    {{ item.current_stock }} {{ item.unit }}
+                                </span>
+                            </td>
+                            <td>
+                                <strong>${{ "%.2f"|format(item.unit_cost) }}</strong>
+                                <br><small class="text-muted">Total: ${{ "%.2f"|format(item.current_stock * item.unit_cost) }}</small>
+                            </td>
+                            <td>
+                                {% if item.vendor %}
+                                    {{ item.vendor.name }}
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if item.current_stock == 0 %}
+                                    <span class="badge badge-danger">Out of Stock</span>
+                                {% elif item.current_stock <= item.reorder_level %}
+                                    <span class="badge badge-warning">Low Stock</span>
+                                {% else %}
+                                    <span class="badge badge-success">In Stock</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="d-flex gap-2">
+                                    <button class="btn btn-outline btn-sm" onclick="quickTransaction({{ item.id }}, 'in')">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                    <button class="btn btn-outline btn-sm" onclick="quickTransaction({{ item.id }}, 'out')">
+                                        <i class="fas fa-minus"></i>
+                                    </button>
+                                    <button class="btn btn-outline btn-sm" onclick="editStock({{ item.id }})">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center" style="padding: 40px;">
+                <i class="fas fa-boxes" style="font-size: 3rem; color: var(--text-light); margin-bottom: 16px;"></i>
+                <h4>No Stock Items Found</h4>
+                <p class="text-muted">Start by adding your first stock item using the form on the right.</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Add New Stock Item Form -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">
+                <i class="fas fa-plus text-success"></i>
+                Add Stock Item
+            </h3>
+        </div>
+        
+        <form method="POST" action="/stock" id="stockForm">
+            <div class="form-group">
+                <label for="item_name" class="form-label">Item Name *</label>
+                <input 
+                    type="text" 
+                    id="item_name" 
+                    name="item_name" 
+                    class="form-control" 
+                    required 
+                    placeholder="Enter item name"
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="description" class="form-label">Description *</label>
+                <textarea 
+                    id="description" 
+                    name="description" 
+                    class="form-control" 
+                    rows="3" 
+                    required 
+                    placeholder="Enter item description"
+                ></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="unit" class="form-label">Unit *</label>
+                <select id="unit" name="unit" class="form-control form-select" required>
+                    <option value="">Select Unit</option>
+                    <option value="piece">Piece</option>
+                    <option value="kg">Kilogram (kg)</option>
+                    <option value="gram">Gram (g)</option>
+                    <option value="liter">Liter (L)</option>
+                    <option value="ml">Milliliter (ml)</option>
+                    <option value="box">Box</option>
+                    <option value="pack">Pack</option>
+                    <option value="bottle">Bottle</option>
+                    <option value="can">Can</option>
+                    <option value="bag">Bag</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="vendor_id" class="form-label">Vendor *</label>
+                <select id="vendor_id" name="vendor_id" class="form-control form-select" required>
+                    <option value="">Select Vendor</option>
+                    {% for vendor in vendors %}
+                        <option value="{{ vendor.id }}">{{ vendor.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="reorder_level" class="form-label">Reorder Level *</label>
+                <input 
+                    type="number" 
+                    id="reorder_level" 
+                    name="reorder_level" 
+                    class="form-control" 
+                    min="1" 
+                    required 
+                    placeholder="Enter reorder level"
+                    value="20"
+                >
+            </div>
+
+            <button type="submit" class="btn btn-success" style="width: 100%;">
+                <i class="fas fa-plus"></i>
+                Add Stock Item
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Stock Statistics -->
+<div class="card" style="margin-top: 20px;">
+    <div class="card-header">
+        <h3 class="card-title">
+            <i class="fas fa-chart-bar text-primary"></i>
+            Stock Overview
+        </h3>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; padding: 20px 0;">
+        <div class="text-center">
+            <div class="stat-number text-success">{{ stock_items|selectattr("current_stock", "gt", 0)|selectattr("current_stock", "gt", "reorder_level")|list|length }}</div>
+            <div class="stat-label">In Stock</div>
+        </div>
+        <div class="text-center">
+            <div class="stat-number text-warning">{{ stock_items|selectattr("current_stock", "le", "reorder_level")|selectattr("current_stock", "gt", 0)|list|length }}</div>
+            <div class="stat-label">Low Stock</div>
+        </div>
+        <div class="text-center">
+            <div class="stat-number text-danger">{{ stock_items|selectattr("current_stock", "eq", 0)|list|length }}</div>
+            <div class="stat-label">Out of Stock</div>
+        </div>
+        <div class="text-center">
+            <div class="stat-number text-primary">
+                {% if stock_items %}
+                    ${{ "%.2f"|format(stock_items|map(attribute='current_stock')|sum * stock_items|map(attribute='unit_cost')|sum / stock_items|length) }}
+                {% else %}
+                    $0.00
+                {% endif %}
+            </div>
+            <div class="stat-label">Total Value</div>
+        </div>
+    </div>
+</div>
+
+<!-- Low Stock Alert -->
+{% set low_stock = stock_items|selectattr("current_stock", "le", "reorder_level")|list %}
+{% if low_stock %}
+<div class="card" style="margin-top: 20px;">
+    <div class="card-header">
+        <h3 class="card-title">
+            <i class="fas fa-exclamation-triangle text-warning"></i>
+            Low Stock Alert
+        </h3>
+        <span class="badge badge-warning">{{ low_stock|length }} Items</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Item Name</th>
+                    <th>Current Stock</th>
+                    <th>Reorder Level</th>
+                    <th>Vendor</th>
+                    <th>Action Required</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in low_stock %}
+                <tr>
+                    <td>
+                        <strong>{{ item.item_name }}</strong>
+                        <br><small class="text-muted">{{ item.description }}</small>
+                    </td>
+                    <td>
+                        <span class="badge badge-{{ 'danger' if item.current_stock == 0 else 'warning' }}">
+                            {{ item.current_stock }} {{ item.unit }}
+                        </span>
+                    </td>
+                    <td>{{ item.reorder_level }} {{ item.unit }}</td>
+                    <td>
+                        {% if item.vendor %}
+                            {{ item.vendor.name }}
+                            <br><small class="text-muted">{{ item.vendor.phone }}</small>
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </td>
+                    <td>
+                        <button class="btn btn-warning btn-sm" onclick="reorderItem({{ item.id }})">
+                            <i class="fas fa-shopping-cart"></i>
+                            Reorder
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Form validation
+    document.getElementById('stockForm').addEventListener('submit', function(e) {
+        const form = e.target;
+        const inputs = form.querySelectorAll('input[required], textarea[required], select[required]');
+        let isValid = true;
+
+        inputs.forEach(input => {
+            if (!input.value.trim()) {
+                input.style.borderColor = 'var(--danger-color)';
+                isValid = false;
+            } else {
+                input.style.borderColor = 'var(--border-color)';
+            }
+        });
+
+        if (!isValid) {
+            e.preventDefault();
+            alert('Please fill in all required fields.');
+        }
+    });
+
+    // Quick transaction function
+    function quickTransaction(stockId, type) {
+        const quantity = prompt(`Enter quantity to ${type === 'in' ? 'add' : 'remove'}:`);
+        if (quantity && !isNaN(quantity) && parseInt(quantity) > 0) {
+            // In a real implementation, this would make an AJAX call
+            alert(`Quick ${type} transaction functionality will be implemented in the next version.`);
+        }
+    }
+
+    // Edit stock function
+    function editStock(stockId) {
+        alert('Edit stock functionality will be implemented in the next version.');
+    }
+
+    // Reorder item function
+    function reorderItem(stockId) {
+        if (confirm('Create a purchase order for this item?')) {
+            alert('Purchase order functionality will be implemented in the next version.');
+        }
+    }
+
+    // Auto-update stock status colors
+    document.addEventListener('DOMContentLoaded', function() {
+        const stockBadges = document.querySelectorAll('.badge');
+        stockBadges.forEach(badge => {
+            const text = badge.textContent.toLowerCase();
+            if (text.includes('out of stock')) {
+                badge.classList.add('badge-danger');
+            } else if (text.includes('low stock')) {
+                badge.classList.add('badge-warning');
+            } else if (text.includes('in stock')) {
+                badge.classList.add('badge-success');
+            }
+        });
+    });
+</script>
+{% endblock %} 

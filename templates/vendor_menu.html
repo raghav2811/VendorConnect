@@ -1,0 +1,379 @@
+{% extends "base.html" %}
+
+{% block title %}My Menu - {{ vendor.name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="header-content">
+        <div>
+            <h1><i class="fas fa-utensils"></i> My Menu Items</h1>
+            <p class="page-subtitle">Manage your restaurant menu - {{ vendor.name }}</p>
+        </div>
+        <div class="header-actions">
+            {% if vendor.is_approved %}
+                <a href="/vendor/menu/add" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Add Menu Item
+                </a>
+            {% else %}
+                <div class="alert alert-warning" style="margin: 0;">
+                    <i class="fas fa-clock"></i> Pending Approval
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Menu Stats -->
+<div class="stats-grid" style="margin-bottom: 30px;">
+    <div class="stat-card">
+        <div class="stat-content">
+            <div class="stat-number">{{ menu_items|length }}</div>
+            <div class="stat-label">Total Items</div>
+        </div>
+        <div class="stat-icon">
+            <i class="fas fa-utensils"></i>
+        </div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-content">
+            <div class="stat-number">{{ menu_items|selectattr("is_available")|list|length }}</div>
+            <div class="stat-label">Available Items</div>
+        </div>
+        <div class="stat-icon">
+            <i class="fas fa-check-circle"></i>
+        </div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-content">
+            <div class="stat-number">{{ menu_items|map(attribute='category')|unique|list|length }}</div>
+            <div class="stat-label">Categories</div>
+        </div>
+        <div class="stat-icon">
+            <i class="fas fa-tags"></i>
+        </div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-content">
+            <div class="stat-number">₹{{ "%.0f"|format(menu_items|selectattr("is_available")|map(attribute='price')|sum) }}</div>
+            <div class="stat-label">Total Value</div>
+        </div>
+        <div class="stat-icon">
+            <i class="fas fa-rupee-sign"></i>
+        </div>
+    </div>
+</div>
+
+<!-- Menu Items Table -->
+<div class="card">
+    <div class="card-header">
+        <h3><i class="fas fa-list"></i> Menu Items</h3>
+        <div class="card-actions">
+            <div class="search-box">
+                <input type="text" placeholder="Search menu items..." id="searchInput">
+            </div>
+            <select id="categoryFilter" class="form-control form-select">
+                <option value="">All Categories</option>
+                {% for category in menu_items|map(attribute='category')|unique %}
+                <option value="{{ category }}">{{ category }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+    <div class="card-body">
+        {% if menu_items %}
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Item Details</th>
+                        <th>Category</th>
+                        <th>Price</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="menuItemsTable">
+                    {% for item in menu_items %}
+                    <tr data-category="{{ item.category }}" data-name="{{ item.name.lower() }}">
+                        <td>
+                            <div class="item-details">
+                                <h4>{{ item.name }}</h4>
+                                <p class="text-muted">{{ item.description }}</p>
+                                {% if item.image_url %}
+                                <small class="text-success"><i class="fas fa-image"></i> Has Image</small>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge badge-secondary">{{ item.category }}</span>
+                        </td>
+                        <td>
+                            <strong>₹{{ item.price }}</strong>
+                        </td>
+                        <td>
+                            {% if item.is_available %}
+                                <span class="badge badge-success">
+                                    <i class="fas fa-check-circle"></i> Available
+                                </span>
+                            {% else %}
+                                <span class="badge badge-danger">
+                                    <i class="fas fa-times-circle"></i> Unavailable
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a href="/vendor/menu/edit/{{ item.id }}" class="btn btn-outline">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <button class="btn btn-warning" onclick="toggleItemStatus({{ item.id }}, {{ item.is_available|lower }})">
+                                    {% if item.is_available %}
+                                        <i class="fas fa-pause"></i>
+                                    {% else %}
+                                        <i class="fas fa-play"></i>
+                                    {% endif %}
+                                </button>
+                                <button class="btn btn-danger" onclick="deleteMenuItem({{ item.id }}, '{{ item.name }}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">
+                <i class="fas fa-utensils"></i>
+            </div>
+            <h3>No Menu Items Yet</h3>
+            <p>Start building your menu by adding your first item!</p>
+            {% if vendor.is_approved %}
+            <a href="/vendor/menu/add" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Add Your First Item
+            </a>
+            {% else %}
+            <p class="text-muted">Your vendor account needs approval before you can add menu items.</p>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Quick Actions -->
+{% if vendor.is_approved and menu_items %}
+<div class="card" style="margin-top: 30px;">
+    <div class="card-header">
+        <h3><i class="fas fa-bolt"></i> Quick Actions</h3>
+    </div>
+    <div class="card-body">
+        <div class="quick-actions">
+            <button class="btn btn-success" onclick="enableAllItems()">
+                <i class="fas fa-check-circle"></i> Enable All Items
+            </button>
+            <button class="btn btn-warning" onclick="disableAllItems()">
+                <i class="fas fa-pause-circle"></i> Disable All Items
+            </button>
+            <a href="/vendor/menu/add" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Add New Item
+            </a>
+            <a href="/vendor/menu/bulk-import" class="btn btn-info">
+                <i class="fas fa-upload"></i> Bulk Import
+            </a>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<style>
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+}
+
+.card-actions {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+.search-box input {
+    width: 250px;
+    padding: 8px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+}
+
+.item-details h4 {
+    margin: 0 0 5px 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.item-details p {
+    margin: 0;
+    font-size: 0.9rem;
+    line-height: 1.3;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+}
+
+.empty-icon {
+    font-size: 4rem;
+    color: var(--border-color);
+    margin-bottom: 20px;
+}
+
+.quick-actions {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .card-actions {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+    
+    .search-box input {
+        width: 100%;
+    }
+    
+    .quick-actions {
+        flex-direction: column;
+    }
+}
+</style>
+
+<script>
+// Search and filter functionality
+function filterTable() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const categoryFilter = document.getElementById('categoryFilter').value;
+    const rows = document.querySelectorAll('#menuItemsTable tr');
+    
+    rows.forEach(row => {
+        const itemName = row.getAttribute('data-name');
+        const itemCategory = row.getAttribute('data-category');
+        
+        const matchesSearch = !searchTerm || itemName.includes(searchTerm);
+        const matchesCategory = !categoryFilter || itemCategory === categoryFilter;
+        
+        if (matchesSearch && matchesCategory) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+}
+
+document.getElementById('searchInput').addEventListener('input', filterTable);
+document.getElementById('categoryFilter').addEventListener('change', filterTable);
+
+// Toggle item availability
+function toggleItemStatus(itemId, currentStatus) {
+    const action = currentStatus ? 'disable' : 'enable';
+    const confirmMessage = `Are you sure you want to ${action} this menu item?`;
+    
+    if (confirm(confirmMessage)) {
+        fetch(`/vendor/menu/toggle/${itemId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ is_available: !currentStatus })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error updating item status');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error updating item status');
+        });
+    }
+}
+
+// Delete menu item
+function deleteMenuItem(itemId, itemName) {
+    if (confirm(`Are you sure you want to delete "${itemName}"? This action cannot be undone.`)) {
+        fetch(`/vendor/menu/delete/${itemId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error deleting menu item');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error deleting menu item');
+        });
+    }
+}
+
+// Bulk actions
+function enableAllItems() {
+    if (confirm('Are you sure you want to enable all menu items?')) {
+        fetch('/vendor/menu/bulk-enable', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error enabling items');
+            }
+        });
+    }
+}
+
+function disableAllItems() {
+    if (confirm('Are you sure you want to disable all menu items?')) {
+        fetch('/vendor/menu/bulk-disable', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error disabling items');
+            }
+        });
+    }
+}
+</script>
+{% endblock %} 

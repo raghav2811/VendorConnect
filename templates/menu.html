@@ -1,0 +1,289 @@
+{% extends "base.html" %}
+
+{% block title %}Menu Items - Vendor Management System{% endblock %}
+
+{% block page_title %}Menu Management{% endblock %}
+{% block page_description %}Manage menu items and their details{% endblock %}
+
+{% block content %}
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">
+    <!-- Menu Items List -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">
+                <i class="fas fa-utensils text-primary"></i>
+                Menu Items
+            </h3>
+            <span class="badge badge-primary">{{ menu_items|length }} Items</span>
+        </div>
+        
+        {% if menu_items %}
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Item Details</th>
+                            <th>Category</th>
+                            <th>Price</th>
+                            <th>Vendor</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in menu_items %}
+                        <tr>
+                            <td>
+                                <strong>{{ item.name }}</strong>
+                                <br><small class="text-muted">{{ item.description }}</small>
+                            </td>
+                            <td>
+                                <span class="badge badge-primary">{{ item.category }}</span>
+                            </td>
+                            <td>
+                                <strong>${{ "%.2f"|format(item.price) }}</strong>
+                            </td>
+                            <td>
+                                {% if item.vendor %}
+                                    {{ item.vendor.name }}
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if item.is_available %}
+                                    <span class="badge badge-success">Available</span>
+                                {% else %}
+                                    <span class="badge badge-danger">Unavailable</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="d-flex gap-2">
+                                    <button class="btn btn-outline btn-sm" onclick="editMenuItem({{ item.id }})">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-outline btn-sm" onclick="toggleAvailability({{ item.id }})">
+                                        <i class="fas fa-toggle-{{ 'on' if item.is_available else 'off' }}"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center" style="padding: 40px;">
+                <i class="fas fa-utensils" style="font-size: 3rem; color: var(--text-light); margin-bottom: 16px;"></i>
+                <h4>No Menu Items Found</h4>
+                <p class="text-muted">Start by adding your first menu item using the form on the right.</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Add New Menu Item Form -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">
+                <i class="fas fa-plus text-success"></i>
+                Add Menu Item
+            </h3>
+        </div>
+        
+        <form method="POST" action="/menu" id="menuForm">
+            <div class="form-group">
+                <label for="name" class="form-label">Item Name *</label>
+                <input 
+                    type="text" 
+                    id="name" 
+                    name="name" 
+                    class="form-control" 
+                    required 
+                    placeholder="Enter item name"
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="description" class="form-label">Description *</label>
+                <textarea 
+                    id="description" 
+                    name="description" 
+                    class="form-control" 
+                    rows="3" 
+                    required 
+                    placeholder="Enter item description"
+                ></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="price" class="form-label">Price ($) *</label>
+                <input 
+                    type="number" 
+                    id="price" 
+                    name="price" 
+                    class="form-control" 
+                    step="0.01" 
+                    min="0" 
+                    required 
+                    placeholder="0.00"
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="category" class="form-label">Category *</label>
+                <select id="category" name="category" class="form-control form-select" required>
+                    <option value="">Select Category</option>
+                    <option value="Appetizers">Appetizers</option>
+                    <option value="Main Course">Main Course</option>
+                    <option value="Desserts">Desserts</option>
+                    <option value="Beverages">Beverages</option>
+                    <option value="Snacks">Snacks</option>
+                    <option value="Specials">Specials</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="vendor_id" class="form-label">Vendor *</label>
+                <select id="vendor_id" name="vendor_id" class="form-control form-select" required>
+                    <option value="">Select Vendor</option>
+                    {% for vendor in vendors %}
+                        <option value="{{ vendor.id }}">{{ vendor.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <button type="submit" class="btn btn-success" style="width: 100%;">
+                <i class="fas fa-plus"></i>
+                Add Menu Item
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Menu Statistics -->
+<div class="card" style="margin-top: 20px;">
+    <div class="card-header">
+        <h3 class="card-title">
+            <i class="fas fa-chart-pie text-primary"></i>
+            Menu Statistics
+        </h3>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; padding: 20px 0;">
+        <div class="text-center">
+            <div class="stat-number text-success">{{ menu_items|selectattr("is_available")|list|length }}</div>
+            <div class="stat-label">Available Items</div>
+        </div>
+        <div class="text-center">
+            <div class="stat-number text-warning">{{ menu_items|rejectattr("is_available")|list|length }}</div>
+            <div class="stat-label">Unavailable Items</div>
+        </div>
+        <div class="text-center">
+            <div class="stat-number text-primary">
+                {% set categories = menu_items|map(attribute='category')|unique|list %}
+                {{ categories|length }}
+            </div>
+            <div class="stat-label">Categories</div>
+        </div>
+        <div class="text-center">
+            <div class="stat-number text-primary">
+                {% if menu_items %}
+                    ${{ "%.2f"|format((menu_items|map(attribute='price')|sum) / (menu_items|length)) }}
+                {% else %}
+                    $0.00
+                {% endif %}
+            </div>
+            <div class="stat-label">Average Price</div>
+        </div>
+    </div>
+</div>
+
+<!-- Categories Overview -->
+<div class="card" style="margin-top: 20px;">
+    <div class="card-header">
+        <h3 class="card-title">
+            <i class="fas fa-tags text-primary"></i>
+            Categories Overview
+        </h3>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; padding: 20px 0;">
+        {% set categories = menu_items|groupby('category') %}
+        {% for category, items in categories %}
+        <div class="text-center">
+            <h4>{{ category }}</h4>
+            <div class="stat-number text-primary">{{ items|list|length }}</div>
+            <div class="stat-label">Items</div>
+            <p class="text-muted" style="font-size: 0.8rem; margin-top: 8px;">
+                Avg: ${{ "%.2f"|format((items|map(attribute='price')|sum) / (items|list|length)) }}
+            </p>
+        </div>
+        {% endfor %}
+        
+        {% if not categories %}
+        <div class="text-center" style="grid-column: 1 / -1;">
+            <p class="text-muted">No categories available. Add menu items to see category breakdown.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Form validation
+    document.getElementById('menuForm').addEventListener('submit', function(e) {
+        const form = e.target;
+        const inputs = form.querySelectorAll('input[required], textarea[required], select[required]');
+        let isValid = true;
+
+        inputs.forEach(input => {
+            if (!input.value.trim()) {
+                input.style.borderColor = 'var(--danger-color)';
+                isValid = false;
+            } else {
+                input.style.borderColor = 'var(--border-color)';
+            }
+        });
+
+        if (!isValid) {
+            e.preventDefault();
+            alert('Please fill in all required fields.');
+        }
+    });
+
+    // Price validation
+    document.getElementById('price').addEventListener('input', function() {
+        const price = parseFloat(this.value);
+        if (price < 0) {
+            this.value = 0;
+        }
+        if (price > 0) {
+            this.style.borderColor = 'var(--success-color)';
+        }
+    });
+
+    // Edit menu item function (placeholder)
+    function editMenuItem(itemId) {
+        alert('Edit menu item functionality will be implemented in the next version.');
+    }
+
+    // Toggle availability function (placeholder)
+    function toggleAvailability(itemId) {
+        if (confirm('Are you sure you want to toggle the availability of this item?')) {
+            alert('Toggle availability functionality will be implemented in the next version.');
+        }
+    }
+
+    // Auto-populate category colors
+    document.addEventListener('DOMContentLoaded', function() {
+        const categoryBadges = document.querySelectorAll('.badge');
+        const colors = ['primary', 'success', 'warning', 'danger', 'secondary'];
+        
+        categoryBadges.forEach((badge, index) => {
+            if (badge.textContent.trim() && !badge.classList.contains('badge-success') && !badge.classList.contains('badge-danger')) {
+                const colorIndex = index % colors.length;
+                badge.classList.add(`badge-${colors[colorIndex]}`);
+            }
+        });
+    });
+</script>
+{% endblock %} 

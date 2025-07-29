@@ -1,0 +1,481 @@
+{% extends "base.html" %}
+
+{% block title %}My Profile - {{ user.full_name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="header-content">
+        <div>
+            <h1><i class="fas fa-user"></i> My Profile</h1>
+            <p class="page-subtitle">Manage your account and preferences</p>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h3><i class="fas fa-edit"></i> Personal Information</h3>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="/buyer/profile/update" id="profileForm">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="full_name" class="form-label">Full Name *</label>
+                                <input type="text" id="full_name" name="full_name" class="form-control" 
+                                       value="{{ user.full_name }}" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="username" class="form-label">Username *</label>
+                                <input type="text" id="username" name="username" class="form-control" 
+                                       value="{{ user.username }}" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email" class="form-label">Email Address *</label>
+                        <input type="email" id="email" name="email" class="form-control" 
+                               value="{{ user.email }}" required>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="phone" class="form-label">Phone Number</label>
+                                <input type="tel" id="phone" name="phone" class="form-control" 
+                                       value="{{ user.phone or '' }}" placeholder="+91 9876543210">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="date_of_birth" class="form-label">Date of Birth</label>
+                                <input type="date" id="date_of_birth" name="date_of_birth" class="form-control" 
+                                       value="{{ user.date_of_birth or '' }}">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="address" class="form-label">Default Delivery Address</label>
+                        <textarea id="address" name="address" class="form-control" rows="3" 
+                                  placeholder="Enter your complete address for deliveries">{{ user.address or '' }}</textarea>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Save Changes
+                        </button>
+                        <button type="reset" class="btn btn-outline">
+                            <i class="fas fa-undo"></i> Reset
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Preferences Section -->
+        <div class="card" style="margin-top: 30px;">
+            <div class="card-header">
+                <h3><i class="fas fa-cog"></i> Food Preferences</h3>
+            </div>
+            <div class="card-body">
+                <form id="preferencesForm">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Dietary Preferences</label>
+                                <div class="checkbox-group">
+                                    <label class="checkbox-item">
+                                        <input type="checkbox" name="diet" value="vegetarian">
+                                        <i class="fas fa-leaf"></i> Vegetarian
+                                    </label>
+                                    <label class="checkbox-item">
+                                        <input type="checkbox" name="diet" value="vegan">
+                                        <i class="fas fa-seedling"></i> Vegan
+                                    </label>
+                                    <label class="checkbox-item">
+                                        <input type="checkbox" name="diet" value="gluten_free">
+                                        <i class="fas fa-ban"></i> Gluten Free
+                                    </label>
+                                    <label class="checkbox-item">
+                                        <input type="checkbox" name="diet" value="dairy_free">
+                                        <i class="fas fa-times-circle"></i> Dairy Free
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Favorite Cuisines</label>
+                                <div class="checkbox-group">
+                                    <label class="checkbox-item">
+                                        <input type="checkbox" name="cuisine" value="indian">
+                                        <i class="fas fa-pepper-hot"></i> Indian
+                                    </label>
+                                    <label class="checkbox-item">
+                                        <input type="checkbox" name="cuisine" value="chinese">
+                                        <i class="fas fa-utensils"></i> Chinese
+                                    </label>
+                                    <label class="checkbox-item">
+                                        <input type="checkbox" name="cuisine" value="italian">
+                                        <i class="fas fa-pizza-slice"></i> Italian
+                                    </label>
+                                    <label class="checkbox-item">
+                                        <input type="checkbox" name="cuisine" value="continental">
+                                        <i class="fas fa-hamburger"></i> Continental
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Save Preferences
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h3><i class="fas fa-info-circle"></i> Account Info</h3>
+            </div>
+            <div class="card-body">
+                <div class="account-stats">
+                    <div class="stat-item">
+                        <label>Account Type</label>
+                        <span class="badge badge-primary">{{ user.role.title() }}</span>
+                    </div>
+                    
+                    <div class="stat-item">
+                        <label>Member Since</label>
+                        <span>{{ user.created_at.strftime('%B %d, %Y') if user.created_at else 'Recently' }}</span>
+                    </div>
+                    
+                    <div class="stat-item">
+                        <label>Total Orders</label>
+                        <span class="badge badge-success">0</span>
+                    </div>
+                    
+                    <div class="stat-item">
+                        <label>Favorite Restaurants</label>
+                        <span class="badge badge-info">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card" style="margin-top: 20px;">
+            <div class="card-header">
+                <h3><i class="fas fa-bell"></i> Notifications</h3>
+            </div>
+            <div class="card-body">
+                <div class="notification-settings">
+                    <div class="setting-item">
+                        <label>Order Updates</label>
+                        <div class="toggle-switch">
+                            <input type="checkbox" id="order_notifications" checked>
+                            <label for="order_notifications"></label>
+                        </div>
+                    </div>
+                    
+                    <div class="setting-item">
+                        <label>Promotional Offers</label>
+                        <div class="toggle-switch">
+                            <input type="checkbox" id="promo_notifications">
+                            <label for="promo_notifications"></label>
+                        </div>
+                    </div>
+                    
+                    <div class="setting-item">
+                        <label>New Restaurants</label>
+                        <div class="toggle-switch">
+                            <input type="checkbox" id="restaurant_notifications">
+                            <label for="restaurant_notifications"></label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card" style="margin-top: 20px;">
+            <div class="card-header">
+                <h3><i class="fas fa-shield-alt"></i> Security</h3>
+            </div>
+            <div class="card-body">
+                <div class="security-actions">
+                    <button class="btn btn-outline btn-block" onclick="changePassword()">
+                        <i class="fas fa-key"></i> Change Password
+                    </button>
+                    <button class="btn btn-outline btn-block" onclick="manageAddresses()">
+                        <i class="fas fa-map-marker-alt"></i> Manage Addresses
+                    </button>
+                    <button class="btn btn-outline btn-block" onclick="privacySettings()">
+                        <i class="fas fa-user-shield"></i> Privacy Settings
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.form-actions {
+    display: flex;
+    gap: 15px;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-color);
+}
+
+.checkbox-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.checkbox-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    margin-bottom: 0;
+}
+
+.checkbox-item:hover {
+    background: #f8f9fa;
+}
+
+.checkbox-item input[type="checkbox"] {
+    margin-right: 8px;
+}
+
+.checkbox-item i {
+    color: var(--primary-color);
+    width: 16px;
+}
+
+.account-stats .stat-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.account-stats .stat-item:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.account-stats .stat-item label {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-bottom: 0;
+}
+
+.notification-settings .setting-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.notification-settings .setting-item:last-child {
+    margin-bottom: 0;
+}
+
+.notification-settings .setting-item label {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-bottom: 0;
+}
+
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 24px;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-switch label {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+    border-radius: 24px;
+    margin-bottom: 0;
+}
+
+.toggle-switch label:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+.toggle-switch input:checked + label {
+    background-color: var(--primary-color);
+}
+
+.toggle-switch input:checked + label:before {
+    transform: translateX(26px);
+}
+
+.security-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.btn-block {
+    width: 100%;
+    text-align: left;
+}
+
+@media (max-width: 768px) {
+    .form-actions {
+        flex-direction: column;
+    }
+    
+    .notification-settings .setting-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+}
+</style>
+
+<script>
+document.getElementById('profileForm').addEventListener('submit', function(e) {
+    const fullName = document.getElementById('full_name').value.trim();
+    const username = document.getElementById('username').value.trim();
+    const email = document.getElementById('email').value.trim();
+    
+    if (fullName.length < 3) {
+        e.preventDefault();
+        alert('Full name must be at least 3 characters long');
+        return;
+    }
+    
+    if (username.length < 3) {
+        e.preventDefault();
+        alert('Username must be at least 3 characters long');
+        return;
+    }
+    
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        e.preventDefault();
+        alert('Please enter a valid email address');
+        return;
+    }
+});
+
+document.getElementById('preferencesForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const dietPreferences = Array.from(document.querySelectorAll('input[name="diet"]:checked'))
+        .map(cb => cb.value);
+    const cuisinePreferences = Array.from(document.querySelectorAll('input[name="cuisine"]:checked'))
+        .map(cb => cb.value);
+    
+    // Save preferences
+    fetch('/buyer/preferences', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            dietary_preferences: dietPreferences,
+            cuisine_preferences: cuisinePreferences
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Preferences saved successfully!');
+        } else {
+            alert('Error saving preferences');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error saving preferences');
+    });
+});
+
+function changePassword() {
+    alert('Change Password - Feature coming soon!');
+}
+
+function manageAddresses() {
+    alert('Manage Addresses - Feature coming soon!');
+}
+
+function privacySettings() {
+    alert('Privacy Settings - Feature coming soon!');
+}
+
+// Auto-save notification settings
+document.querySelectorAll('.toggle-switch input').forEach(toggle => {
+    toggle.addEventListener('change', function() {
+        const setting = this.id;
+        const enabled = this.checked;
+        
+        // Save notification preference
+        fetch('/buyer/notifications', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                setting: setting,
+                enabled: enabled
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (!data.success) {
+                console.error('Failed to save notification setting');
+                // Revert toggle if save failed
+                this.checked = !enabled;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            // Revert toggle if save failed
+            this.checked = !enabled;
+        });
+    });
+});
+</script>
+{% endblock %} 

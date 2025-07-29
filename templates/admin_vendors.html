@@ -1,0 +1,492 @@
+{% extends "base.html" %}
+
+{% block title %}Vendor Management - Admin{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="header-content">
+        <div>
+            <h1><i class="fas fa-building"></i> Vendor Management</h1>
+            <p class="page-subtitle">Manage all vendors in the system</p>
+        </div>
+        <div class="header-actions">
+            <a href="/admin/approvals" class="btn btn-primary">
+                <i class="fas fa-clock"></i> Pending Approvals
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Vendor Stats -->
+<div class="stats-grid" style="margin-bottom: 30px;">
+    <div class="stat-card">
+        <div class="stat-content">
+            <div class="stat-number">{{ vendors|length }}</div>
+            <div class="stat-label">Total Vendors</div>
+        </div>
+        <div class="stat-icon">
+            <i class="fas fa-building"></i>
+        </div>
+    </div>
+    
+    <div class="stat-card success">
+        <div class="stat-content">
+            <div class="stat-number">{{ vendors|selectattr("is_approved", "equalto", true)|list|length }}</div>
+            <div class="stat-label">Approved</div>
+        </div>
+        <div class="stat-icon">
+            <i class="fas fa-check-circle"></i>
+        </div>
+    </div>
+    
+    <div class="stat-card warning">
+        <div class="stat-content">
+            <div class="stat-number">{{ vendors|selectattr("is_approved", "equalto", false)|list|length }}</div>
+            <div class="stat-label">Pending</div>
+        </div>
+        <div class="stat-icon">
+            <i class="fas fa-clock"></i>
+        </div>
+    </div>
+    
+    <div class="stat-card info">
+        <div class="stat-content">
+            <div class="stat-number">{{ vendors|selectattr("is_active", "equalto", true)|list|length }}</div>
+            <div class="stat-label">Active</div>
+        </div>
+        <div class="stat-icon">
+            <i class="fas fa-store"></i>
+        </div>
+    </div>
+</div>
+
+<!-- Vendors Table -->
+<div class="card">
+    <div class="card-header">
+        <h3><i class="fas fa-list"></i> All Vendors</h3>
+        <div class="card-actions">
+            <div class="search-box">
+                <input type="text" placeholder="Search vendors..." id="searchInput">
+            </div>
+            <select id="statusFilter" class="form-control form-select">
+                <option value="">All Status</option>
+                <option value="approved">Approved</option>
+                <option value="pending">Pending</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+            </select>
+        </div>
+    </div>
+    <div class="card-body">
+        {% if vendors %}
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Vendor Details</th>
+                        <th>Business Type</th>
+                        <th>Contact</th>
+                        <th>Status</th>
+                        <th>Registered</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="vendorsTable">
+                    {% for vendor in vendors %}
+                    <tr data-status="{{ 'approved' if vendor.is_approved else 'pending' }}" 
+                        data-active="{{ 'active' if vendor.is_active else 'inactive' }}"
+                        data-name="{{ vendor.name.lower() }}">
+                        <td>
+                            <div class="vendor-details">
+                                <h4>{{ vendor.name }}</h4>
+                                <p class="text-muted">{{ vendor.email }}</p>
+                                <small class="text-muted">{{ vendor.address }}</small>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge badge-info">{{ vendor.business_type or 'Not specified' }}</span>
+                        </td>
+                        <td>
+                            <div class="contact-info">
+                                <p><strong>{{ vendor.contact_person }}</strong></p>
+                                <p class="text-muted">{{ vendor.phone }}</p>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="status-badges">
+                                {% if vendor.is_approved %}
+                                    <span class="badge badge-success">Approved</span>
+                                {% else %}
+                                    <span class="badge badge-warning">Pending</span>
+                                {% endif %}
+                                
+                                {% if vendor.is_active %}
+                                    <span class="badge badge-primary">Active</span>
+                                {% else %}
+                                    <span class="badge badge-secondary">Inactive</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td>{{ vendor.created_at.strftime('%B %d, %Y') if vendor.created_at else 'Unknown' }}</td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-info" onclick="viewVendor({{ vendor.id }})">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                {% if not vendor.is_approved %}
+                                <button class="btn btn-success" onclick="approveVendor({{ vendor.id }})">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                                {% endif %}
+                                <button class="btn btn-warning" onclick="editVendor({{ vendor.id }})">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-danger" onclick="deactivateVendor({{ vendor.id }})">
+                                    <i class="fas fa-ban"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">
+                <i class="fas fa-building"></i>
+            </div>
+            <h3>No Vendors Found</h3>
+            <p>No vendors have been registered yet.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+}
+
+.card-actions {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+.search-box input {
+    width: 250px;
+    padding: 8px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+}
+
+.vendor-details h4 {
+    margin: 0 0 5px 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.vendor-details p {
+    margin: 0;
+    font-size: 0.9rem;
+}
+
+.contact-info p {
+    margin: 0;
+    font-size: 0.9rem;
+}
+
+.status-badges {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+}
+
+.empty-icon {
+    font-size: 4rem;
+    color: var(--border-color);
+    margin-bottom: 20px;
+}
+
+/* Modal Styles */
+.modal {
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    background-color: white;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 500px;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.modal-header, .modal-footer {
+    padding: 20px 25px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-footer {
+    border-bottom: none;
+    border-top: 1px solid var(--border-color);
+}
+
+.modal-body {
+    padding: 25px;
+}
+
+.close {
+    color: var(--text-muted);
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close:hover {
+    color: var(--text-primary);
+}
+
+.vendor-info .info-row,
+.user-info .info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.vendor-info .info-row:last-child,
+.user-info .info-row:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.vendor-info .info-row label,
+.user-info .info-row label {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-bottom: 0;
+    font-weight: 600;
+}
+
+@media (max-width: 768px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .card-actions {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+    
+    .search-box input {
+        width: 100%;
+    }
+    
+    .status-badges {
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+}
+</style>
+
+<script>
+// Search and filter functionality
+function filterVendors() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const statusFilter = document.getElementById('statusFilter').value;
+    const rows = document.querySelectorAll('#vendorsTable tr');
+    
+    rows.forEach(row => {
+        const vendorName = row.getAttribute('data-name');
+        const vendorStatus = row.getAttribute('data-status');
+        const vendorActive = row.getAttribute('data-active');
+        
+        const matchesSearch = !searchTerm || vendorName.includes(searchTerm);
+        let matchesStatus = true;
+        
+        if (statusFilter === 'approved') {
+            matchesStatus = vendorStatus === 'approved';
+        } else if (statusFilter === 'pending') {
+            matchesStatus = vendorStatus === 'pending';
+        } else if (statusFilter === 'active') {
+            matchesStatus = vendorActive === 'active';
+        } else if (statusFilter === 'inactive') {
+            matchesStatus = vendorActive === 'inactive';
+        }
+        
+        if (matchesSearch && matchesStatus) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+}
+
+document.getElementById('searchInput').addEventListener('input', filterVendors);
+document.getElementById('statusFilter').addEventListener('change', filterVendors);
+
+function viewVendor(vendorId) {
+    // Create and show vendor details modal
+    showVendorModal(vendorId);
+}
+
+function approveVendor(vendorId) {
+    if (confirm('Are you sure you want to approve this vendor?')) {
+        fetch(`/admin/approve_vendor/${vendorId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Vendor approved successfully!');
+                location.reload();
+            } else {
+                alert('Error approving vendor: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error approving vendor');
+        });
+    }
+}
+
+function editVendor(vendorId) {
+    // Redirect to vendor edit page or show edit modal
+    window.location.href = `/admin/vendors/${vendorId}/edit`;
+}
+
+function deactivateVendor(vendorId) {
+    if (confirm('Are you sure you want to deactivate this vendor? This will prevent them from receiving new orders.')) {
+        fetch(`/admin/vendors/${vendorId}/deactivate`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Vendor deactivated successfully!');
+                location.reload();
+            } else {
+                alert('Error deactivating vendor: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error deactivating vendor');
+        });
+    }
+}
+
+function showVendorModal(vendorId) {
+    // Fetch vendor details and show in modal
+    fetch(`/admin/vendors/${vendorId}/details`)
+        .then(response => response.json())
+        .then(vendor => {
+            const modalHtml = `
+                <div id="vendorModal" class="modal" style="display: flex;">
+                    <div class="modal-content" style="max-width: 600px;">
+                        <div class="modal-header">
+                            <h3><i class="fas fa-store"></i> ${vendor.name}</h3>
+                            <span class="close" onclick="closeVendorModal()">&times;</span>
+                        </div>
+                        <div class="modal-body">
+                            <div class="vendor-info">
+                                <div class="info-row">
+                                    <label>Business Type:</label>
+                                    <span>${vendor.business_type || 'Not specified'}</span>
+                                </div>
+                                <div class="info-row">
+                                    <label>Contact Person:</label>
+                                    <span>${vendor.contact_person}</span>
+                                </div>
+                                <div class="info-row">
+                                    <label>Email:</label>
+                                    <span>${vendor.email}</span>
+                                </div>
+                                <div class="info-row">
+                                    <label>Phone:</label>
+                                    <span>${vendor.phone}</span>
+                                </div>
+                                <div class="info-row">
+                                    <label>Address:</label>
+                                    <span>${vendor.address}</span>
+                                </div>
+                                <div class="info-row">
+                                    <label>Description:</label>
+                                    <span>${vendor.description || 'No description provided'}</span>
+                                </div>
+                                <div class="info-row">
+                                    <label>Status:</label>
+                                    <span>
+                                        ${vendor.is_approved ? '<span class="badge badge-success">Approved</span>' : '<span class="badge badge-warning">Pending</span>'}
+                                        ${vendor.is_active ? '<span class="badge badge-primary">Active</span>' : '<span class="badge badge-secondary">Inactive</span>'}
+                                    </span>
+                                </div>
+                                <div class="info-row">
+                                    <label>Registered:</label>
+                                    <span>${new Date(vendor.created_at).toLocaleDateString()}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn btn-outline" onclick="closeVendorModal()">Close</button>
+                            ${!vendor.is_approved ? `<button class="btn btn-success" onclick="closeVendorModal(); approveVendor(${vendor.id});">Approve Vendor</button>` : ''}
+                            <button class="btn btn-primary" onclick="closeVendorModal(); editVendor(${vendor.id});">Edit Vendor</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error loading vendor details');
+        });
+}
+
+function closeVendorModal() {
+    const modal = document.getElementById('vendorModal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+// Close modal when clicking outside
+window.addEventListener('click', function(event) {
+    const modal = document.getElementById('vendorModal');
+    if (modal && event.target === modal) {
+        closeVendorModal();
+    }
+});
+</script>
+{% endblock %} 

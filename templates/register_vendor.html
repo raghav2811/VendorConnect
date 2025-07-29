@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vendor Registration - Vendor Management System</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='/css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-card" style="max-width: 600px;">
+            <div class="login-header">
+                <h1><i class="fas fa-store"></i> Join as Vendor</h1>
+                <p>Start selling your products to customers</p>
+            </div>
+
+            {% if error %}
+                <div class="alert alert-danger">
+                    {{ error }}
+                </div>
+            {% endif %}
+
+            <form method="POST" action="/register/vendor" id="vendorForm">
+                <h3 style="color: var(--primary-color); margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+                    <i class="fas fa-user"></i> Personal Information
+                </h3>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="form-group">
+                        <label for="username" class="form-label">Username *</label>
+                        <input type="text" id="username" name="username" class="form-control" required placeholder="Choose username">
+                    </div>
+                    <div class="form-group">
+                        <label for="email" class="form-label">Personal Email *</label>
+                        <input type="email" id="email" name="email" class="form-control" required placeholder="your.email@example.com">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="full_name" class="form-label">Full Name *</label>
+                    <input type="text" id="full_name" name="full_name" class="form-control" required placeholder="Your full name">
+                </div>
+
+                <div class="form-group">
+                    <label for="password" class="form-label">Password *</label>
+                    <input type="password" id="password" name="password" class="form-control" required placeholder="Choose a strong password" minlength="6">
+                </div>
+
+                <h3 style="color: var(--primary-color); margin: 30px 0 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+                    <i class="fas fa-building"></i> Business Information
+                </h3>
+
+                <div class="form-group">
+                    <label for="business_name" class="form-label">Business Name *</label>
+                    <input type="text" id="business_name" name="business_name" class="form-control" required placeholder="Your business/restaurant name">
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="form-group">
+                        <label for="contact_person" class="form-label">Contact Person *</label>
+                        <input type="text" id="contact_person" name="contact_person" class="form-control" required placeholder="Primary contact name">
+                    </div>
+                    <div class="form-group">
+                        <label for="phone" class="form-label">Business Phone *</label>
+                        <input type="tel" id="phone" name="phone" class="form-control" required placeholder="Business phone number">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="business_email" class="form-label">Business Email *</label>
+                    <input type="email" id="business_email" name="business_email" class="form-control" required placeholder="business@example.com">
+                </div>
+
+                <div class="form-group">
+                    <label for="business_type" class="form-label">Business Type *</label>
+                    <select id="business_type" name="business_type" class="form-control form-select" required>
+                        <option value="Restaurant">Restaurant</option>
+                        <option value="Fast Food">Fast Food</option>
+                        <option value="Cafe">Cafe</option>
+                        <option value="Bakery">Bakery</option>
+                        <option value="Grocery">Grocery Store</option>
+                        <option value="Catering">Catering Service</option>
+                        <option value="Food Truck">Food Truck</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="address" class="form-label">Business Address *</label>
+                    <textarea id="address" name="address" class="form-control" rows="3" required placeholder="Complete business address with landmarks"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="description" class="form-label">Business Description</label>
+                    <textarea id="description" name="description" class="form-control" rows="3" placeholder="Tell customers about your business, specialties, etc."></textarea>
+                </div>
+
+                <div class="alert alert-warning" style="margin: 20px 0;">
+                    <strong><i class="fas fa-info-circle"></i> Note:</strong> 
+                    Your vendor account will need admin approval before you can start selling. 
+                    We'll review your application and notify you via email.
+                </div>
+
+                <button type="submit" class="btn btn-warning" style="width: 100%; margin-top: 24px;">
+                    <i class="fas fa-store"></i>
+                    Submit Vendor Application
+                </button>
+            </form>
+
+            <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--border-color); text-align: center;">
+                <p class="text-muted" style="font-size: 0.9rem;">
+                    Already have an account? 
+                    <a href="/login" style="color: var(--primary-color); text-decoration: none;">
+                        <strong>Sign In</strong>
+                    </a>
+                </p>
+                <p class="text-muted" style="font-size: 0.85rem;">
+                    Just want to order food? 
+                    <a href="/register/buyer" style="color: var(--success-color); text-decoration: none;">
+                        Register as Buyer
+                    </a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('vendorForm').addEventListener('submit', function(e) {
+            const password = document.getElementById('password').value;
+            if (password.length < 6) {
+                e.preventDefault();
+                alert('Password must be at least 6 characters long.');
+                return;
+            }
+        });
+
+        // Auto-fill contact person with full name if empty
+        document.getElementById('full_name').addEventListener('blur', function() {
+            const contactPerson = document.getElementById('contact_person');
+            if (!contactPerson.value) {
+                contactPerson.value = this.value;
+            }
+        });
+    </script>
+</body>
+</html> 

@@ -1,0 +1,360 @@
+{% extends "base.html" %}
+
+{% block title %}My Business Profile - {{ vendor.name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="header-content">
+        <div>
+            <h1><i class="fas fa-store"></i> My Business Profile</h1>
+            <p class="page-subtitle">Manage your business information and settings</p>
+        </div>
+        <div class="header-actions">
+            <span class="badge {% if vendor.is_approved %}badge-success{% else %}badge-warning{% endif %}">
+                {% if vendor.is_approved %}
+                    <i class="fas fa-check-circle"></i> Approved
+                {% else %}
+                    <i class="fas fa-clock"></i> Pending Approval
+                {% endif %}
+            </span>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h3><i class="fas fa-edit"></i> Business Information</h3>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="/vendor/profile/update" id="profileForm">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="name" class="form-label">Business Name *</label>
+                                <input type="text" id="name" name="name" class="form-control" 
+                                       value="{{ vendor.name }}" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="business_type" class="form-label">Business Type *</label>
+                                <select id="business_type" name="business_type" class="form-control form-select" required>
+                                    <option value="Restaurant" {% if vendor.business_type == 'Restaurant' %}selected{% endif %}>Restaurant</option>
+                                    <option value="Fast Food" {% if vendor.business_type == 'Fast Food' %}selected{% endif %}>Fast Food</option>
+                                    <option value="Cafe" {% if vendor.business_type == 'Cafe' %}selected{% endif %}>Cafe</option>
+                                    <option value="Bakery" {% if vendor.business_type == 'Bakery' %}selected{% endif %}>Bakery</option>
+                                    <option value="Grocery" {% if vendor.business_type == 'Grocery' %}selected{% endif %}>Grocery Store</option>
+                                    <option value="Catering" {% if vendor.business_type == 'Catering' %}selected{% endif %}>Catering Service</option>
+                                    <option value="Food Truck" {% if vendor.business_type == 'Food Truck' %}selected{% endif %}>Food Truck</option>
+                                    <option value="Other" {% if vendor.business_type == 'Other' %}selected{% endif %}>Other</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="contact_person" class="form-label">Contact Person *</label>
+                                <input type="text" id="contact_person" name="contact_person" class="form-control" 
+                                       value="{{ vendor.contact_person }}" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="phone" class="form-label">Phone Number *</label>
+                                <input type="tel" id="phone" name="phone" class="form-control" 
+                                       value="{{ vendor.phone }}" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email" class="form-label">Business Email *</label>
+                        <input type="email" id="email" name="email" class="form-control" 
+                               value="{{ vendor.email }}" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="address" class="form-label">Business Address *</label>
+                        <textarea id="address" name="address" class="form-control" rows="3" required>{{ vendor.address }}</textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="description" class="form-label">Business Description</label>
+                        <textarea id="description" name="description" class="form-control" rows="4" 
+                                  placeholder="Tell customers about your business, specialties, history, etc.">{{ vendor.description or '' }}</textarea>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Save Changes
+                        </button>
+                        <button type="reset" class="btn btn-outline">
+                            <i class="fas fa-undo"></i> Reset
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h3><i class="fas fa-info-circle"></i> Business Status</h3>
+            </div>
+            <div class="card-body">
+                <div class="status-info">
+                    <div class="status-item">
+                        <label>Registration Status</label>
+                        <span class="badge {% if vendor.is_approved %}badge-success{% else %}badge-warning{% endif %}">
+                            {% if vendor.is_approved %}Approved{% else %}Pending{% endif %}
+                        </span>
+                    </div>
+                    
+                    <div class="status-item">
+                        <label>Account Status</label>
+                        <span class="badge {% if vendor.is_active %}badge-success{% else %}badge-danger{% endif %}">
+                            {% if vendor.is_active %}Active{% else %}Inactive{% endif %}
+                        </span>
+                    </div>
+                    
+                    <div class="status-item">
+                        <label>Member Since</label>
+                        <span>{{ vendor.created_at.strftime('%B %d, %Y') if vendor.created_at else 'Recently' }}</span>
+                    </div>
+                    
+                    <div class="status-item">
+                        <label>Last Updated</label>
+                        <span>{{ vendor.updated_at.strftime('%B %d, %Y') if vendor.updated_at else 'Never' }}</span>
+                    </div>
+                </div>
+
+                {% if not vendor.is_approved %}
+                <div class="alert alert-warning" style="margin-top: 20px;">
+                    <h4><i class="fas fa-clock"></i> Pending Approval</h4>
+                    <p>Your vendor account is awaiting admin approval. Once approved, you'll be able to:</p>
+                    <ul>
+                        <li>Add menu items</li>
+                        <li>Manage inventory</li>
+                        <li>Receive orders</li>
+                        <li>Access sales analytics</li>
+                    </ul>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card" style="margin-top: 20px;">
+            <div class="card-header">
+                <h3><i class="fas fa-chart-bar"></i> Quick Stats</h3>
+            </div>
+            <div class="card-body">
+                <div class="stat-item">
+                    <label>Menu Items</label>
+                    <span class="badge badge-primary">0</span>
+                </div>
+                <div class="stat-item">
+                    <label>Stock Items</label>
+                    <span class="badge badge-info">0</span>
+                </div>
+                <div class="stat-item">
+                    <label>Total Orders</label>
+                    <span class="badge badge-success">0</span>
+                </div>
+                <div class="stat-item">
+                    <label>Revenue</label>
+                    <span class="text-muted">₹0</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card" style="margin-top: 20px;">
+            <div class="card-header">
+                <h3><i class="fas fa-cog"></i> Settings</h3>
+            </div>
+            <div class="card-body">
+                <div class="setting-item">
+                    <label>Business Hours</label>
+                    <button class="btn btn-outline btn-sm">
+                        <i class="fas fa-clock"></i> Set Hours
+                    </button>
+                </div>
+                <div class="setting-item">
+                    <label>Delivery Areas</label>
+                    <button class="btn btn-outline btn-sm">
+                        <i class="fas fa-map"></i> Configure
+                    </button>
+                </div>
+                <div class="setting-item">
+                    <label>Payment Methods</label>
+                    <button class="btn btn-outline btn-sm">
+                        <i class="fas fa-credit-card"></i> Setup
+                    </button>
+                </div>
+                <div class="setting-item">
+                    <label>Notifications</label>
+                    <button class="btn btn-outline btn-sm">
+                        <i class="fas fa-bell"></i> Manage
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.form-actions {
+    display: flex;
+    gap: 15px;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-color);
+}
+
+.status-info .status-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.status-info .status-item:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.status-info .status-item label {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-bottom: 0;
+}
+
+.stat-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.stat-item:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.stat-item label {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-bottom: 0;
+}
+
+.setting-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.setting-item:last-child {
+    margin-bottom: 0;
+}
+
+.setting-item label {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-bottom: 0;
+}
+
+.alert h4 {
+    margin-bottom: 10px;
+    font-size: 1rem;
+}
+
+.alert ul {
+    margin: 10px 0 0 20px;
+    font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+    .form-actions {
+        flex-direction: column;
+    }
+    
+    .setting-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+}
+</style>
+
+<script>
+document.getElementById('profileForm').addEventListener('submit', function(e) {
+    const name = document.getElementById('name').value.trim();
+    const phone = document.getElementById('phone').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const address = document.getElementById('address').value.trim();
+    
+    if (name.length < 3) {
+        e.preventDefault();
+        alert('Business name must be at least 3 characters long');
+        return;
+    }
+    
+    if (phone.length < 10) {
+        e.preventDefault();
+        alert('Please enter a valid phone number');
+        return;
+    }
+    
+    if (address.length < 10) {
+        e.preventDefault();
+        alert('Please provide a complete business address');
+        return;
+    }
+});
+
+// Character counter for description
+document.getElementById('description').addEventListener('input', function() {
+    const maxLength = 500;
+    const currentLength = this.value.length;
+    
+    // Create or update character counter
+    let counter = document.getElementById('description-counter');
+    if (!counter) {
+        counter = document.createElement('small');
+        counter.id = 'description-counter';
+        counter.className = 'text-muted';
+        this.parentNode.appendChild(counter);
+    }
+    
+    counter.textContent = `${currentLength}/${maxLength} characters`;
+    
+    if (currentLength > maxLength) {
+        counter.className = 'text-danger';
+        this.value = this.value.substring(0, maxLength);
+    } else {
+        counter.className = 'text-muted';
+    }
+});
+
+// Auto-save functionality (placeholder)
+let autoSaveTimeout;
+document.querySelectorAll('#profileForm input, #profileForm textarea, #profileForm select').forEach(field => {
+    field.addEventListener('input', function() {
+        clearTimeout(autoSaveTimeout);
+        autoSaveTimeout = setTimeout(() => {
+            // Auto-save draft (placeholder implementation)
+            console.log('Auto-saving draft...');
+        }, 2000);
+    });
+});
+</script>
+{% endblock %} 

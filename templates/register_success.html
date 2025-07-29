@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registration Successful - Vendor Management System</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='/css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-header text-center">
+                <div style="font-size: 4rem; color: var(--success-color); margin-bottom: 20px;">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <h1 style="color: var(--success-color);">Registration Successful!</h1>
+                {% if user_type == "vendor" %}
+                    <p>Welcome to our vendor community!</p>
+                {% else %}
+                    <p>Welcome to our platform!</p>
+                {% endif %}
+            </div>
+
+            <div class="alert alert-success">
+                {{ message }}
+            </div>
+
+            {% if user_type == "vendor" %}
+                <div class="alert alert-warning">
+                    <strong><i class="fas fa-clock"></i> What's Next?</strong>
+                    <ul style="margin: 10px 0 0 20px; text-align: left;">
+                        <li>Our team will review your vendor application</li>
+                        <li>You'll receive an email notification once approved</li>
+                        <li>After approval, you can login and start adding your products</li>
+                        <li>Set up your menu items and stock inventory</li>
+                    </ul>
+                </div>
+            {% else %}
+                <div class="alert alert-success">
+                    <strong><i class="fas fa-rocket"></i> Get Started!</strong>
+                    <ul style="margin: 10px 0 0 20px; text-align: left;">
+                        <li>Browse approved vendors and their menus</li>
+                        <li>Place orders from your favorite restaurants</li>
+                        <li>Track your order status in real-time</li>
+                        <li>Enjoy delicious food delivered to your doorstep!</li>
+                    </ul>
+                </div>
+            {% endif %}
+
+            <div style="margin-top: 32px;">
+                <a href="/login" class="btn btn-primary" style="width: 100%;">
+                    <i class="fas fa-sign-in-alt"></i>
+                    Continue to Login
+                </a>
+            </div>
+
+            <div style="margin-top: 20px; text-align: center;">
+                <p class="text-muted" style="font-size: 0.9rem;">
+                    {% if user_type == "vendor" %}
+                        Questions about the vendor process? 
+                        <a href="mailto:support@vendorms.com" style="color: var(--primary-color);">Contact Support</a>
+                    {% else %}
+                        Ready to explore? 
+                        <a href="/login" style="color: var(--primary-color);">Start Browsing</a>
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Auto redirect to login after 10 seconds
+        setTimeout(function() {
+            window.location.href = '/login';
+        }, 10000);
+
+        // Show countdown
+        let countdown = 10;
+        const countdownElement = document.createElement('p');
+        countdownElement.className = 'text-muted';
+        countdownElement.style.fontSize = '0.8rem';
+        countdownElement.style.marginTop = '20px';
+        document.querySelector('.login-card').appendChild(countdownElement);
+
+        const updateCountdown = () => {
+            countdownElement.textContent = `Redirecting to login in ${countdown} seconds...`;
+            countdown--;
+            if (countdown < 0) {
+                clearInterval(timer);
+            }
+        };
+
+        updateCountdown();
+        const timer = setInterval(updateCountdown, 1000);
+    </script>
+</body>
+</html> 

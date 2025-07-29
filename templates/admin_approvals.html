@@ -1,0 +1,520 @@
+{% extends "base.html" %}
+
+{% block title %}Vendor Approvals - Admin{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="header-content">
+        <div>
+            <h1><i class="fas fa-check-circle"></i> Vendor Approvals</h1>
+            <p class="page-subtitle">Review and approve pending vendor applications</p>
+        </div>
+        <div class="header-actions">
+            <span class="badge badge-warning">
+                {{ pending_vendors|length }} Pending
+            </span>
+        </div>
+    </div>
+</div>
+
+{% if pending_vendors %}
+<div class="approval-grid">
+    {% for vendor in pending_vendors %}
+    <div class="vendor-card" id="vendor-{{ vendor.id }}">
+        <div class="vendor-header">
+            <div class="vendor-icon">
+                <i class="fas fa-store"></i>
+            </div>
+            <div class="vendor-basic-info">
+                <h3>{{ vendor.name }}</h3>
+                <p class="vendor-type">{{ vendor.business_type }}</p>
+                <p class="vendor-date">Applied: {{ vendor.created_at.strftime('%B %d, %Y') if vendor.created_at else 'Recently' }}</p>
+            </div>
+            <div class="vendor-status">
+                <span class="badge badge-warning">Pending</span>
+            </div>
+        </div>
+
+        <div class="vendor-details">
+            <div class="detail-section">
+                <h4><i class="fas fa-user"></i> Contact Information</h4>
+                <div class="detail-grid">
+                    <div class="detail-item">
+                        <label>Contact Person</label>
+                        <span>{{ vendor.contact_person }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Phone</label>
+                        <span>{{ vendor.phone }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Email</label>
+                        <span>{{ vendor.email }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="detail-section">
+                <h4><i class="fas fa-building"></i> Business Details</h4>
+                <div class="detail-grid">
+                    <div class="detail-item">
+                        <label>Business Type</label>
+                        <span class="badge badge-secondary">{{ vendor.business_type }}</span>
+                    </div>
+                    <div class="detail-item full-width">
+                        <label>Address</label>
+                        <span>{{ vendor.address }}</span>
+                    </div>
+                    {% if vendor.description %}
+                    <div class="detail-item full-width">
+                        <label>Description</label>
+                        <span>{{ vendor.description }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="vendor-actions">
+            <button class="btn btn-success" onclick="approveVendor({{ vendor.id }}, '{{ vendor.name }}')">
+                <i class="fas fa-check"></i> Approve
+            </button>
+            <button class="btn btn-danger" onclick="rejectVendor({{ vendor.id }}, '{{ vendor.name }}')">
+                <i class="fas fa-times"></i> Reject
+            </button>
+            <button class="btn btn-info" onclick="viewVendorDetails({{ vendor.id }})">
+                <i class="fas fa-eye"></i> View Details
+            </button>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <div class="empty-icon">
+        <i class="fas fa-check-circle"></i>
+    </div>
+    <h3>No Pending Approvals</h3>
+    <p>All vendor applications have been processed. Great job!</p>
+    <a href="/admin/vendors" class="btn btn-primary">
+        <i class="fas fa-building"></i> View All Vendors
+    </a>
+</div>
+{% endif %}
+
+<!-- Vendor Details Modal -->
+<div id="vendorModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="modalVendorName">Vendor Details</h3>
+            <span class="close" onclick="closeModal()">&times;</span>
+        </div>
+        <div class="modal-body" id="modalVendorBody">
+            <!-- Content will be populated by JavaScript -->
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-outline" onclick="closeModal()">Close</button>
+        </div>
+    </div>
+</div>
+
+<style>
+.approval-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+    gap: 25px;
+    margin-bottom: 30px;
+}
+
+.vendor-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.vendor-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.vendor-header {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: white;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.vendor-icon {
+    width: 50px;
+    height: 50px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+}
+
+.vendor-basic-info h3 {
+    margin: 0 0 5px 0;
+    font-size: 1.3rem;
+    font-weight: 600;
+}
+
+.vendor-type {
+    margin: 0 0 5px 0;
+    opacity: 0.9;
+    font-size: 0.9rem;
+}
+
+.vendor-date {
+    margin: 0;
+    opacity: 0.8;
+    font-size: 0.8rem;
+}
+
+.vendor-status {
+    margin-left: auto;
+}
+
+.vendor-details {
+    padding: 25px;
+}
+
+.detail-section {
+    margin-bottom: 25px;
+}
+
+.detail-section:last-child {
+    margin-bottom: 0;
+}
+
+.detail-section h4 {
+    color: var(--primary-color);
+    margin: 0 0 15px 0;
+    font-size: 1rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.detail-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+}
+
+.detail-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.detail-item.full-width {
+    grid-column: 1 / -1;
+}
+
+.detail-item label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 5px;
+}
+
+.detail-item span {
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    line-height: 1.4;
+}
+
+.vendor-actions {
+    padding: 20px 25px;
+    background: var(--background-secondary);
+    display: flex;
+    gap: 10px;
+    border-top: 1px solid var(--border-color);
+}
+
+.vendor-actions .btn {
+    flex: 1;
+    font-size: 0.9rem;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 80px 20px;
+    color: var(--text-muted);
+}
+
+.empty-icon {
+    font-size: 5rem;
+    color: var(--success-color);
+    margin-bottom: 25px;
+}
+
+/* Modal Styles */
+.modal {
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    background-color: white;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 600px;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.modal-header {
+    padding: 20px 25px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-body {
+    padding: 25px;
+}
+
+.modal-footer {
+    padding: 20px 25px;
+    border-top: 1px solid var(--border-color);
+    text-align: right;
+}
+
+.close {
+    color: var(--text-muted);
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.close:hover {
+    color: var(--text-primary);
+}
+
+@media (max-width: 768px) {
+    .approval-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .vendor-header {
+        flex-direction: column;
+        text-align: center;
+        gap: 10px;
+    }
+    
+    .vendor-status {
+        margin-left: 0;
+    }
+    
+    .detail-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .vendor-actions {
+        flex-direction: column;
+    }
+}
+</style>
+
+<script>
+function approveVendor(vendorId, vendorName) {
+    if (confirm(`Are you sure you want to approve "${vendorName}"? They will be able to start selling immediately.`)) {
+        fetch(`/admin/approve_vendor/${vendorId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Remove the vendor card from the page
+                const vendorCard = document.getElementById(`vendor-${vendorId}`);
+                vendorCard.style.animation = 'slideOut 0.3s ease-in-out';
+                setTimeout(() => {
+                    vendorCard.remove();
+                    
+                    // Check if no more pending vendors
+                    const remainingCards = document.querySelectorAll('.vendor-card');
+                    if (remainingCards.length === 0) {
+                        location.reload();
+                    }
+                }, 300);
+                
+                // Show success message
+                showNotification('success', `${vendorName} has been approved successfully!`);
+            } else {
+                showNotification('error', data.message || 'Failed to approve vendor');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('error', 'Error approving vendor');
+        });
+    }
+}
+
+function rejectVendor(vendorId, vendorName) {
+    if (confirm(`Are you sure you want to reject "${vendorName}"? This action cannot be undone.`)) {
+        fetch(`/admin/reject_vendor/${vendorId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Remove the vendor card from the page
+                const vendorCard = document.getElementById(`vendor-${vendorId}`);
+                vendorCard.style.animation = 'slideOut 0.3s ease-in-out';
+                setTimeout(() => {
+                    vendorCard.remove();
+                    
+                    // Check if no more pending vendors
+                    const remainingCards = document.querySelectorAll('.vendor-card');
+                    if (remainingCards.length === 0) {
+                        location.reload();
+                    }
+                }, 300);
+                
+                // Show success message
+                showNotification('warning', `${vendorName} has been rejected.`);
+            } else {
+                showNotification('error', data.message || 'Failed to reject vendor');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('error', 'Error rejecting vendor');
+        });
+    }
+}
+
+function viewVendorDetails(vendorId) {
+    // In a real implementation, you'd fetch detailed vendor info
+    const modal = document.getElementById('vendorModal');
+    const modalBody = document.getElementById('modalVendorBody');
+    
+    modalBody.innerHTML = `
+        <div class="loading-spinner">
+            <i class="fas fa-spinner fa-spin"></i> Loading vendor details...
+        </div>
+    `;
+    
+    modal.style.display = 'flex';
+    
+    // Simulate loading vendor details
+    setTimeout(() => {
+        modalBody.innerHTML = `
+            <div class="vendor-detail-info">
+                <h4>Additional Information</h4>
+                <p><strong>Registration Date:</strong> Today</p>
+                <p><strong>Application Status:</strong> Pending Review</p>
+                <p><strong>Documents:</strong> Business License, Tax Registration</p>
+                <p><strong>Verification:</strong> Phone verified, Email verified</p>
+                
+                <h4 style="margin-top: 20px;">Notes</h4>
+                <textarea class="form-control" placeholder="Add admin notes..." rows="3"></textarea>
+            </div>
+        `;
+    }, 1000);
+}
+
+function closeModal() {
+    document.getElementById('vendorModal').style.display = 'none';
+}
+
+function showNotification(type, message) {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.innerHTML = `
+        <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'warning' ? 'exclamation-triangle' : 'times-circle'}"></i>
+        ${message}
+    `;
+    
+    // Add to page
+    document.body.appendChild(notification);
+    
+    // Show notification
+    setTimeout(() => notification.classList.add('show'), 100);
+    
+    // Remove notification after 3 seconds
+    setTimeout(() => {
+        notification.classList.remove('show');
+        setTimeout(() => document.body.removeChild(notification), 300);
+    }, 3000);
+}
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+    const modal = document.getElementById('vendorModal');
+    if (event.target == modal) {
+        closeModal();
+    }
+}
+
+// Add CSS for animations
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideOut {
+        from { opacity: 1; transform: translateX(0); }
+        to { opacity: 0; transform: translateX(-100%); }
+    }
+    
+    .notification {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: white;
+        padding: 15px 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        border-left: 4px solid;
+        z-index: 1001;
+        transform: translateX(400px);
+        transition: transform 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        max-width: 300px;
+    }
+    
+    .notification.show {
+        transform: translateX(0);
+    }
+    
+    .notification-success { border-left-color: var(--success-color); }
+    .notification-warning { border-left-color: var(--warning-color); }
+    .notification-error { border-left-color: var(--danger-color); }
+    
+    .loading-spinner {
+        text-align: center;
+        padding: 40px;
+        color: var(--text-muted);
+    }
+`;
+document.head.appendChild(style);
+</script>
+{% endblock %} 
